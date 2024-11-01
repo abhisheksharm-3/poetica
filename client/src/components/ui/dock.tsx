@@ -73,6 +73,7 @@ export interface DockIconProps {
   size?: number;
   magnification?: number;
   distance?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mouseX?: any;
   className?: string;
   children?: React.ReactNode;

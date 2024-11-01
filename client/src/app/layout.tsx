@@ -3,6 +3,7 @@ import { Sora, Source_Serif_4 } from 'next/font/google'
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
+//TODO: Review the next/font implementation
 const sora = Sora({
   subsets: ['latin'],
   display: 'swap',

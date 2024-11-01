@@ -21,7 +21,7 @@ const Hero = ({ scrollToComponent }: HeroProps) => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="leading-7 [&:not(:first-child)]:mt-6 text-xl md:text-2xl text-muted-foreground"
+          className="leading-7 [&:not(:first-child)]:mt-6 text-xl md:text-2xl text-muted-foreground font-body"
         >
           Where AI Meets Poetic Emotion
         </motion.p>

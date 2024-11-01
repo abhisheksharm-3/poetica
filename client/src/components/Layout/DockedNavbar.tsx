@@ -91,9 +91,9 @@ const DATA = {
   },
 };
 
-export function DockDemo() {
+export function DockedNavbar() {
   return (
-    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg border bg-background md:shadow-xl">
+    <div className="flex flex-col items-center justify-center overflow-hidden rounded-lg md:shadow-xl fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
       <TooltipProvider>
         <Dock direction="middle">
           {DATA.navbar.map((item) => (

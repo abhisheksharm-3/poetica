@@ -1,53 +1,129 @@
 import { motion } from 'framer-motion'
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
+import { Volume2, ArrowDownCircle } from 'lucide-react'
 
 interface HeroProps {
   scrollToComponent: () => void;
 }
 
 const Hero = ({ scrollToComponent }: HeroProps) => {
+  const handleAudioPlay = () => {
+    // In a real implementation, this would play the audio
+    console.log('Playing audio')
+  }
+
+  const fadeUpVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: [0.215, 0.61, 0.355, 1]
+      }
+    })
+  }
+
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
-      <div className="container mx-auto px-6 text-center relative z-10">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="scroll-m-20 text-4xl md:text-6xl font-extrabold tracking-tight lg:text-7xl font-heading"
-        >
-          Poetica
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="leading-7 [&:not(:first-child)]:mt-6 text-xl md:text-2xl text-muted-foreground font-body"
-        >
-          Where AI Meets Poetic Emotion
-        </motion.p>
-        <motion.p
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="leading-7 [&:not(:first-child)]:mt-6 text-lg max-w-2xl mx-auto text-muted-foreground"
-        >
-          Experience the future of poetry with our AI-powered platform. Create emotionally rich, diverse, and captivating verses in seconds.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-          className="flex justify-center space-x-4 mt-10"
-        >
-          <Button size="lg">Try Poetica</Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            onClick={scrollToComponent}
+    <section className="min-h-screen flex items-center justify-center py-20">
+      <div className="container mx-auto px-4 max-w-3xl">
+        <div className="space-y-12">
+          {/* Word and Pronunciation Section */}
+          <motion.div 
+            custom={0}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpVariant}
+            className="space-y-6"
           >
-            How It Works
-          </Button>
-        </motion.div>
+            <div className="flex items-center gap-4">
+              <h1 className="text-5xl md:text-7xl font-serif tracking-tight">
+                poētica
+              </h1>
+              <button 
+                onClick={handleAudioPlay}
+                className="h-12 w-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Listen to pronunciation"
+              >
+                <Volume2 className="h-6 w-6 text-blue-600" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-xl text-muted-foreground font-mono">
+                /poˈeːtɪka/
+              </p>
+              <div className="flex gap-2 items-center">
+                <p className="text-sm italic text-muted-foreground">
+                  Latin
+                </p>
+                <span className="text-muted-foreground">•</span>
+                <p className="text-sm text-muted-foreground">
+                  fem. of poēticus (&quot;poetic&quot;)
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Etymology and Definition Section */}
+          <motion.div 
+            custom={1}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpVariant}
+            className="space-y-4 border-l-2 border-gray-200 pl-6"
+          >
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+                Etymology
+              </p>
+              <p className="text-base text-muted-foreground">
+                From Latin <span className="italic">poēticus</span>, from Ancient Greek <span className="italic">ποιητικός</span> (poiētikós, &quot;creative, productive&quot;), from <span className="italic">ποιέω</span> (poiéō, &quot;I make, create&quot;).
+              </p>
+            </div>
+            
+            <div className="space-y-4 mt-6">
+              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+                Meaning
+              </p>
+              <div>
+                <span className="text-sm text-muted-foreground">1.</span>
+                <p className="text-lg mt-1">
+                  The art and principles of poetic composition
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">2.</span>
+                <p className="text-lg mt-1">
+                  A modern platform merging classical poetic traditions with artificial intelligence
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Action Buttons */}
+          <motion.div
+            custom={2}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpVariant}
+            className="flex flex-col sm:flex-row items-center gap-4 pt-6"
+          >
+            <Button size="lg" className="w-full sm:w-auto">
+              Begin Creating
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={scrollToComponent}
+              className="w-full sm:w-auto group"
+            >
+              Discover More
+              <ArrowDownCircle className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-1" />
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </section>
   )

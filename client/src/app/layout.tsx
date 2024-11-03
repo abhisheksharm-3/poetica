@@ -28,9 +28,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="hide-scrollbar">
       <body
-        className={`${sora.variable} ${sourceSerif4.variable} ${sora.className} ${sourceSerif4.className} antialiased`}
+        className={`${sora.variable} ${sourceSerif4.variable} ${sora.className} ${sourceSerif4.className} antialiased overflow-x-hidden`}
       >
         <ThemeProvider
           attribute="class"

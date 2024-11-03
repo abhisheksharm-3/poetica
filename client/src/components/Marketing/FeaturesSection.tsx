@@ -1,104 +1,89 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Brain, Feather, BarChart3, Zap, PaletteIcon, Globe } from 'lucide-react'
+import { Brain, Feather, BarChart3, Zap, Palette, Globe } from 'lucide-react'
 
 const FeaturesSection = () => {
   const features = [
     {
       icon: Brain,
       title: "Emotional Intelligence",
-      description: "Our advanced neural network captures nuanced human emotions, translating complex feelings into poetic expression.",
-      color: "text-purple-500",
-      bgColor: "bg-purple-50",
-      gradient: "from-purple-500 to-purple-700"
+      description: "Captures nuanced human emotions, translating complex feelings into verse."
     },
     {
       icon: Feather,
       title: "Versatile Poetry Styles",
-      description: "Explore an extensive range of poetic forms, from classic sonnets to contemporary free verse, tailored to your creative vision.",
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
-      gradient: "from-blue-500 to-blue-700"
+      description: "From classic sonnets to contemporary free verse, tailored to your vision."
     },
     {
       icon: BarChart3,
-      title: "Instant Poem Analysis",
-      description: "Receive deep, real-time insights into sentiment, literary techniques, and emotional resonance of generated poetry.",
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-      gradient: "from-green-500 to-green-700"
+      title: "Instant Analysis",
+      description: "Real-time insights into sentiment and literary techniques."
     },
     {
       icon: Zap,
       title: "Rapid Generation",
-      description: "Create compelling, original poems in seconds, powered by state-of-the-art language models and creative algorithms.",
-      color: "text-orange-500",
-      bgColor: "bg-orange-50",
-      gradient: "from-orange-500 to-orange-700"
+      description: "Create compelling, original poems in seconds with AI assistance."
     },
     {
-      icon: PaletteIcon,
-      title: "Creative Customization",
-      description: "Fine-tune your poem's tone, style, and emotional landscape with intuitive, powerful customization options.",
-      color: "text-pink-500",
-      bgColor: "bg-pink-50",
-      gradient: "from-pink-500 to-pink-700"
+      icon: Palette,
+      title: "Creative Control",
+      description: "Fine-tune tone, style, and emotional landscape intuitively."
     },
     {
       icon: Globe,
-      title: "Multilingual Support",
-      description: "Generate and analyze poetry across multiple languages, bridging cultural and linguistic boundaries.",
-      color: "text-teal-500",
-      bgColor: "bg-teal-50",
-      gradient: "from-teal-500 to-teal-700"
+      title: "Multilingual",
+      description: "Generate and analyze poetry across multiple languages."
     }
   ]
 
+  const fadeUpVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: [0.215, 0.61, 0.355, 1]
+      }
+    })
+  }
+
   return (
-    <section id="features" className="py-20 bg-background">
-      <div className="container mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-16 text-foreground">
-          Poetica&apos;s Innovative Features
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <section className="py-32 bg-background">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <motion.h2 
+          initial="hidden"
+          animate="visible"
+          variants={fadeUpVariant}
+          custom={0}
+          className="text-3xl md:text-4xl font-serif tracking-tight text-center mb-20"
+        >
+          Features
+        </motion.h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 0.6, 
-                delay: index * 0.1,
-                type: "spring",
-                stiffness: 100 
-              }}
+              custom={index + 1}
+              initial="hidden"
+              animate="visible"
+              variants={fadeUpVariant}
               className="group"
             >
-              <div className={`
-                border border-border rounded-xl 
-                p-6 h-full flex flex-col 
-                hover:shadow-xl transition-all duration-300
-                hover:bg-gradient-to-br ${feature.gradient} 
-                hover:text-white group-hover:scale-105
-              `}>
-                <div className={`
-                  ${feature.bgColor} 
-                  ${feature.color} 
-                  p-4 rounded-full 
-                  mb-6 w-16 h-16 
-                  flex items-center justify-center
-                  transition-all duration-300
-                  group-hover:rotate-12
-                `}>
-                  <feature.icon className="w-8 h-8" strokeWidth={1.5} />
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border group-hover:border-foreground/20 transition-colors">
+                    <feature.icon className="w-5 h-5 text-foreground/60 group-hover:text-foreground transition-colors" 
+                      strokeWidth={1.5} 
+                    />
+                  </div>
+                  <h3 className="text-lg font-medium tracking-tight">
+                    {feature.title}
+                  </h3>
                 </div>
-                <h3 className={`
-                  text-xl font-semibold mb-4 
-                  ${feature.color} group-hover:text-white
-                `}>
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground group-hover:text-white/80 flex-grow">
+                <p className="text-sm text-muted-foreground pl-14">
                   {feature.description}
                 </p>
               </div>

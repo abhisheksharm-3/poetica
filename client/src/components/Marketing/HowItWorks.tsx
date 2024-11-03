@@ -1,78 +1,100 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Wand2, PenTool, BookOpen, ChevronRight } from 'lucide-react'
+import { Wand2, PenTool, BookOpen } from 'lucide-react'
 
 const HowItWorks = () => {
   const steps = [
     {
       title: "Choose Mood & Theme",
       description: "Select the emotional tone and creative direction for your poem.",
-      icon: Wand2,
-      color: "text-purple-500",
-      bgColor: "bg-purple-50"
+      icon: Wand2
     },
     {
       title: "Select Poetry Style",
       description: "Pick from classic forms like sonnet, haiku, or free verse.",
-      icon: PenTool,
-      color: "text-blue-500", 
-      bgColor: "bg-blue-50"
+      icon: PenTool
     },
     {
       title: "Generate & Analyze",
       description: "Receive a unique AI-crafted poem with deep literary insights.",
-      icon: BookOpen,
-      color: "text-green-500",
-      bgColor: "bg-green-50"
+      icon: BookOpen
     }
   ]
 
+  const fadeUpVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: [0.215, 0.61, 0.355, 1]
+      }
+    })
+  }
+
   return (
-    <section id="how-it-works" className="py-20 bg-muted">
-      <div className="container mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-16 text-foreground">
-          How Poetica Works
-        </h2>
-        <div className="flex flex-col md:flex-row justify-center items-center space-y-12 md:space-y-0 md:space-x-8">
+    <section className="min-h-screen flex items-center justify-center py-20">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <motion.div 
+          custom={0}
+          initial="hidden"
+          animate="visible"
+          variants={fadeUpVariant}
+          className="space-y-2 text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-serif tracking-tight">
+            How Poetica Works
+          </h2>
+          <p className="text-base text-muted-foreground">
+            Create meaningful poetry in three simple steps
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {steps.map((step, index) => (
-            <React.Fragment key={index}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.6, 
-                  delay: index * 0.2,
-                  type: "spring",
-                  stiffness: 100 
-                }}
-                className="flex flex-col items-center text-center max-w-xs"
-              >
-                <div className={`
-                  ${step.bgColor} 
-                  ${step.color} 
-                  p-6 rounded-full mb-6 
-                  shadow-lg transition-all 
-                  group-hover:scale-105
-                  flex items-center justify-center
-                `}>
-                  <step.icon className="w-10 h-10" strokeWidth={1.5} />
+            <motion.div
+              key={index}
+              custom={index + 1}
+              initial="hidden"
+              animate="visible"
+              variants={fadeUpVariant}
+              className="relative"
+            >
+              <div className="space-y-6">
+                <div className="relative">
+                  {/* Connection lines */}
+                  {index < steps.length - 1 && (
+                    <div className="hidden md:block absolute top-1/2 left-[3rem] right-0 h-[2px] bg-gradient-to-r from-blue-200 to-transparent -translate-y-1/2" />
+                  )}
+                  
+                  {/* Icon container */}
+                  <div className="relative z-10 inline-flex">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-blue-100 rounded-full blur-xl opacity-50" />
+                      <div className="relative h-12 w-12 flex items-center justify-center rounded-full border border-blue-200 bg-white">
+                        <step.icon className="h-5 w-5 text-blue-600" strokeWidth={1.5} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {step.description}
-                </p>
-              </motion.div>
-              {index < steps.length - 1 && (
-                <div className="hidden md:block">
-                  <ChevronRight 
-                    className="w-8 h-8 text-muted-foreground" 
-                    strokeWidth={1.5} 
-                  />
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-mono text-muted-foreground">
+                      0{index + 1}
+                    </span>
+                    <h3 className="text-lg font-medium">
+                      {step.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
                 </div>
-              )}
-            </React.Fragment>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>

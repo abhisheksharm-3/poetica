@@ -1,84 +1,102 @@
 import Link from 'next/link'
-import { Github, Twitter, Linkedin, Mail } from 'lucide-react'
+import { Github, Twitter } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-background border-t border-border py-12">
-      <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* About Section */}
-          <div>
-            <h3 className="text-2xl font-bold mb-4 text-foreground">Poetica</h3>
-            <p className="text-muted-foreground max-w-md mb-4">
-              Powered by advanced neural networks, Poetica transforms creative expression through cutting-edge AI technology.
-            </p>
-            <div className="flex space-x-4">
-              <a href="https://github.com/yourproject" target="_blank" className="text-muted-foreground hover:text-foreground">
-                <Github className="w-6 h-6" />
-              </a>
-              <a href="https://twitter.com/yourproject" target="_blank" className="text-muted-foreground hover:text-foreground">
-                <Twitter className="w-6 h-6" />
-              </a>
-              <a href="https://linkedin.com/company/yourproject" target="_blank" className="text-muted-foreground hover:text-foreground">
-                <Linkedin className="w-6 h-6" />
-              </a>
-              <a href="mailto:contact@poetica.ai" className="text-muted-foreground hover:text-foreground">
-                <Mail className="w-6 h-6" />
-              </a>
+    <footer className="border-t border-border/40 py-20">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="space-y-16">
+          {/* Main Content */}
+          <div className="grid gap-16 md:grid-cols-2">
+            {/* Brand Section */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-serif text-2xl tracking-tight">poetica</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Transforming creative expression through neural networks
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <a 
+                  href="https://github.com/yourproject" 
+                  target="_blank" 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="GitHub"
+                >
+                  <Github className="h-5 w-5" />
+                </a>
+                <a 
+                  href="https://twitter.com/yourproject" 
+                  target="_blank" 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Newsletter Section */}
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium">Stay Updated</h4>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Get weekly insights on AI poetry and creativity
+                </p>
+              </div>
+              <form className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="Email address"
+                  className="max-w-[240px]"
+                />
+                <Button type="submit" variant="outline">
+                  Subscribe
+                </Button>
+              </form>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-xl font-semibold mb-4 text-foreground">Explore</h4>
-            <nav className="flex flex-col space-y-2">
-              <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-                Features
-              </Link>
-              <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
-                How It Works
-              </Link>
-              <Link href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">
-                Demo
-              </Link>
-              <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
-                Blog
-              </Link>
-              <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                Privacy Policy
-              </Link>
-            </nav>
+          {/* Links Section */}
+          <div className="flex flex-wrap gap-6 text-sm">
+            <Link 
+              href="/features" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Features
+            </Link>
+            <Link 
+              href="/blog" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Blog
+            </Link>
+            <Link 
+              href="/privacy" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link 
+              href="/terms" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms
+            </Link>
           </div>
 
-          {/* Newsletter Signup */}
-          <div>
-            <h4 className="text-xl font-semibold mb-4 text-foreground">Stay Inspired</h4>
-            <form className="flex flex-col space-y-2">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button 
-                type="submit" 
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                Subscribe to Insights
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Bottom Section */}
-        <div className="mt-8 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center">
-          <p className="text-muted-foreground text-sm mb-2 md:mb-0">
-            © {currentYear} Poetica. All rights reserved.
-          </p>
-          <div className="flex space-x-4 text-sm text-muted-foreground">
-            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full">Made with AI</span>
-            <Link href="/terms" className="hover:text-foreground">Terms of Service</Link>
+          {/* Bottom Section */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-border/40">
+            <p className="text-sm text-muted-foreground">
+              © {currentYear} Poetica. All rights reserved.
+            </p>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600">
+              <span className="text-xs font-medium">Made with AI</span>
+            </div>
           </div>
         </div>
       </div>

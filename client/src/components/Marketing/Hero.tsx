@@ -1,15 +1,39 @@
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Volume2, ArrowDownCircle } from 'lucide-react'
+import { useState } from 'react';
 
 interface HeroProps {
   scrollToComponent: () => void;
 }
 
 const Hero = ({ scrollToComponent }: HeroProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const handleAudioPlay = () => {
-    // In a real implementation, this would play the audio
-    console.log('Playing audio')
+    if (!window.speechSynthesis) {
+      console.error('Speech synthesis not supported');
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance('poetica');
+    
+    // Configure the utterance
+    utterance.rate = 0.8; // Slightly slower for clarity
+    utterance.pitch = 1;
+    utterance.lang = 'la'; // Latin language code
+    
+    // Add event handlers
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+
+    // Play the audio
+    window.speechSynthesis.speak(utterance);
   }
 
   const fadeUpVariant = {
@@ -43,10 +67,15 @@ const Hero = ({ scrollToComponent }: HeroProps) => {
               </h1>
               <button 
                 onClick={handleAudioPlay}
-                className="h-12 w-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={isPlaying}
+                className={`h-12 w-12 flex items-center justify-center rounded-full transition-colors ${
+                  isPlaying ? 'bg-gray-100' : 'hover:bg-gray-100'
+                }`}
                 aria-label="Listen to pronunciation"
               >
-                <Volume2 className="h-6 w-6 text-blue-600" />
+                <Volume2 className={`h-6 w-6 ${
+                  isPlaying ? 'text-gray-400' : 'text-blue-600'
+                }`} />
               </button>
             </div>
             

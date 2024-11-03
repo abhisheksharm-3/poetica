@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
@@ -51,11 +51,64 @@ const fadeUpVariant: Variants = {
   })
 };
 
+// Separate component for the search params dependent part
+const PoemDialog: React.FC<{ poems: Poem[], onClose: () => void }> = ({ poems, onClose }) => {
+  const searchParams = useSearchParams();
+  const poemId = searchParams.get('poem');
+  const openPoem = poems.find(p => p.id === Number(poemId));
+
+  if (!openPoem) return null;
+
+  return (
+    <Dialog open={!!poemId} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-serif">{openPoem.title}</DialogTitle>
+            {openPoem.trending && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                Trending
+              </Badge>
+            )}
+          </div>
+        </DialogHeader>
+        <div className="space-y-6">
+          <p className="font-serif text-muted-foreground whitespace-pre-line">
+            {openPoem.fullText}
+          </p>
+          
+          <div className="flex flex-wrap gap-2">
+            {openPoem.tags.map(tag => (
+              <Badge key={tag} variant="outline">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-4 pt-2">
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <Heart className="mr-2 h-4 w-4" />
+              {openPoem.saveCount}
+            </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {openPoem.comments}
+            </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const FavoritesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [openPoem, setOpenPoem] = useState<Poem | null>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Sample data for favorited poems
   const favoritedPoems: Poem[] = [
@@ -93,22 +146,12 @@ const FavoritesPage: React.FC = () => {
     }
   ];
 
-  // Handle URL changes and initial load
-  useEffect(() => {
-    const poemId = searchParams.get('poem');
-    const selectedPoem = favoritedPoems.find(p => p.id === Number(poemId));
-    setOpenPoem(selectedPoem || null);
-  }, [searchParams]);
-
-  // Update URL when a poem is opened/closed
   const handlePoemOpen = (poem: Poem): void => {
     router.push(`?poem=${poem.id}`, { scroll: false });
-    setOpenPoem(poem);
   };
 
   const handlePoemClose = (): void => {
     router.push('?', { scroll: false });
-    setOpenPoem(null);
   };
 
   const handleButtonClick = (e: React.MouseEvent): void => {
@@ -276,54 +319,13 @@ const FavoritesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Poem Dialog */}
-      <Dialog open={openPoem !== null} onOpenChange={() => handlePoemClose()}>
-        <DialogContent className="max-w-2xl">
-          {openPoem && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center justify-between">
-                  <DialogTitle className="text-2xl font-serif">{openPoem.title}</DialogTitle>
-                  {openPoem.trending && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
-                      Trending
-                    </Badge>
-                  )}
-                </div>
-              </DialogHeader>
-              <div className="space-y-6">
-                <p className="font-serif text-muted-foreground whitespace-pre-line">
-                  {openPoem.fullText}
-                </p>
-                
-                <div className="flex flex-wrap gap-2">
-                  {openPoem.tags.map(tag => (
-                    <Badge key={tag} variant="outline">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                
-                <div className="flex items-center gap-4 pt-2">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground">
-                    <Heart className="mr-2 h-4 w-4" />
-                    {openPoem.saveCount}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {openPoem.comments}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground">
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Poem Dialog with Suspense */}
+      <Suspense fallback={null}>
+        <PoemDialog 
+          poems={favoritedPoems}
+          onClose={handlePoemClose}
+        />
+      </Suspense>
     </Layout>
   );
 };

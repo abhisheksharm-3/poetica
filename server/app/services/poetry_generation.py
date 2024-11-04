@@ -1,9 +1,9 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-# tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-3B-Instruct")
-# model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-3B-Instruct")
-tokenizer = AutoTokenizer.from_pretrained("nvidia/Llama-3.1-Nemotron-70B-Instruct-HF")
-model = AutoModelForCausalLM.from_pretrained("nvidia/Llama-3.1-Nemotron-70B-Instruct-HF")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-3B-Instruct")
+model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-3B-Instruct")
+# tokenizer = AutoTokenizer.from_pretrained("nvidia/Llama-3.1-Nemotron-70B-Instruct-HF")
+# model = AutoModelForCausalLM.from_pretrained("nvidia/Llama-3.1-Nemotron-70B-Instruct-HF")
 
 def generate_poem(input_text):
        """Generate a poem based on the user's mood, theme, and style input."""

@@ -1,16 +1,22 @@
-"use client"
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Wand2, Save, RotateCcw, Send } from 'lucide-react';
-import Layout from '@/components/Layout/Layout';
+"use client";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Wand2, Save, RotateCcw, Send } from "lucide-react";
+import Layout from "@/components/Layout/Layout";
 
 const CreatePage = () => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
 
   const fadeUpVariant = {
     hidden: { opacity: 0, y: 20 },
@@ -20,9 +26,9 @@ const CreatePage = () => {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: [0.215, 0.61, 0.355, 1]
-      }
-    })
+        ease: [0.215, 0.61, 0.355, 1],
+      },
+    }),
   };
 
   return (
@@ -78,7 +84,9 @@ const CreatePage = () => {
                       <SelectValue placeholder="Select tone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="contemplative">Contemplative</SelectItem>
+                      <SelectItem value="contemplative">
+                        Contemplative
+                      </SelectItem>
                       <SelectItem value="joyful">Joyful</SelectItem>
                       <SelectItem value="melancholic">Melancholic</SelectItem>
                       <SelectItem value="romantic">Romantic</SelectItem>
@@ -87,7 +95,9 @@ const CreatePage = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-sm font-medium">Creativity Level</label>
+                  <label className="text-sm font-medium">
+                    Creativity Level
+                  </label>
                   <Slider
                     defaultValue={[50]}
                     max={100}
@@ -97,6 +107,54 @@ const CreatePage = () => {
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Traditional</span>
                     <span>Experimental</span>
+                  </div>
+                </div>
+
+                {/* Top P Control */}
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">
+                    Diversity of Ideas
+                  </label>
+                  <Slider
+                    defaultValue={[0.9]}
+                    max={1}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Conservative</span>
+                    <span>Diverse</span>
+                  </div>
+                </div>
+
+                {/* Max Length Control */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Poem Length</label>
+                  <Select defaultValue="medium">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select length" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="short">Short (100 words)</SelectItem>
+                      <SelectItem value="medium">Medium (200 words)</SelectItem>
+                      <SelectItem value="long">Long (300 words)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Repetition Penalty */}
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Word Variety</label>
+                  <Slider
+                    defaultValue={[1.2]}
+                    min={1}
+                    max={2}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Natural Repetition</span>
+                    <span>Avoid Repetition</span>
                   </div>
                 </div>
               </CardContent>
@@ -111,7 +169,7 @@ const CreatePage = () => {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
-                
+
                 <div className="flex flex-wrap gap-3">
                   <Button className="group">
                     <Wand2 className="mr-2 h-4 w-4" />
@@ -147,8 +205,12 @@ const CreatePage = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
               <p>• Start with a strong image or emotion to anchor your poem</p>
-              <p>• Use specific, concrete details rather than abstract concepts</p>
-              <p>• Experiment with line breaks to control pacing and emphasis</p>
+              <p>
+                • Use specific, concrete details rather than abstract concepts
+              </p>
+              <p>
+                • Experiment with line breaks to control pacing and emphasis
+              </p>
               <p>• Read your work aloud to test its rhythm and flow</p>
             </div>
           </motion.div>

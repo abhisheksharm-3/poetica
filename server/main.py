@@ -1,62 +1,61 @@
-from fastapi import FastAPI
-from app.api.endpoints.poetry import router as poetry_router
-import os
+# app.py
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 import logging
-from typing import Tuple
-from starlette.applications import Starlette
-from starlette.responses import Response
-from starlette.routing import Route
-from starlette.staticfiles import StaticFiles
-from huggingface_hub import login
-from functools import lru_cache
+from contextlib import asynccontextmanager
+from app.services.poetry_generation import PoetryGenerationService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
-app.include_router(poetry_router, prefix="/api/v1/poetry")
+poetry_service = None
 
-@lru_cache()
-def get_hf_token() -> str:
-    """Get Hugging Face token from environment variables."""
-    token = os.getenv("HF_TOKEN")
-    if not token:
-        raise EnvironmentError(
-            "HF_TOKEN environment variable not found. "
-            "Please set your Hugging Face access token."
-        )
-    return token
+class GenerationParams(BaseModel):
+    prompt: str
+    max_length: int = Field(default=50, ge=1, le=512)
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    top_p: float = Field(default=0.9, ge=0.0, le=1.0)
+    top_k: int = Field(default=20, ge=0)
+    num_beams: int = Field(default=2, ge=1, le=8)
+    no_repeat_ngram_size: int = Field(default=2, ge=0)
+    length_penalty: float = Field(default=1.0, ge=0.0)
+    repetition_penalty: float = Field(default=1.0, ge=0.0)
+    do_sample: bool = Field(default=True)
+    early_stopping: bool = Field(default=True)
 
-def init_huggingface():
-    """Initialize Hugging Face authentication."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global poetry_service
     try:
-        token = get_hf_token()
-        login(token=token)
-        logger.info("Successfully logged in to Hugging Face")
+        poetry_service = PoetryGenerationService()
+        poetry_service.preload_models()
+        yield
+    finally:
+        del poetry_service
+
+app = FastAPI(lifespan=lifespan)
+
+@app.post("/generate")
+async def generate_poem(params: GenerationParams):
+    try:
+        poem = poetry_service.generate_poem(
+            prompt=params.prompt,
+            max_new_tokens=params.max_length,
+            temperature=params.temperature,
+            top_p=params.top_p,
+            top_k=params.top_k,
+            num_beams=params.num_beams,
+            no_repeat_ngram_size=params.no_repeat_ngram_size,
+            length_penalty=params.length_penalty,
+            repetition_penalty=params.repetition_penalty,
+            do_sample=params.do_sample,
+            early_stopping=params.early_stopping
+        )
+        return {"poem": poem}
     except Exception as e:
-        logger.error(f"Failed to login to Hugging Face: {str(e)}")
-        raise
+        logger.error(f"Error generating poem: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-def get_app_and_port() -> Tuple[Starlette, int]:
-    port = int(os.getenv("PORT", "8000"))
-    return app, port
-
-async def lifecheck(request):
-    return Response("OK", media_type="text/plain")
-
-if __name__ == "__main__":
-    # Initialize Hugging Face authentication before starting the server
-    init_huggingface()
-    
-    routes = [
-        Route("/", app.router),
-        Route("/healthz", lifecheck),
-    ]
-
-    app_and_port = get_app_and_port()
-    app = app_and_port[0]
-    port = app_and_port[1]
-
-    logger.info(f"Starting FastAPI server on port {port}")
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-    app.run(host="0.0.0.0", port=port)
+@app.get("/healthcheck")
+async def healthcheck():
+    return {"status": "healthy"}

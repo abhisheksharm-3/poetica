@@ -3,6 +3,7 @@ fastapi==0.109.2
 uvicorn==0.27.1
 pydantic==2.6.1
 huggingface_hub
+bitsandbytes
 # For API requests and handling
 requests==2.31.0
 python-multipart==0.0.9

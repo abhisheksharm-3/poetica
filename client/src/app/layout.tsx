@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sora, Source_Serif_4 } from 'next/font/google'
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 //TODO: Review the next/font implementation
 const sora = Sora({
@@ -39,6 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

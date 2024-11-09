@@ -45,7 +45,7 @@ const CreatePage = () => {
   return (
     <Layout className="min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-4xl min-h-screen">
-        <div className="space-y-8">
+        <div className="space-y-8 mb-10">
           {/* Header Section */}
           <motion.div
             custom={0}

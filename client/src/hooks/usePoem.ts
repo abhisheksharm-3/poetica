@@ -49,6 +49,35 @@ export const usePoem = () => {
     }
   };
 
+  const handleGenerateFast = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/poem/generate-fast", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formState),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate poem");
+      }
+
+      const data = await response.json();
+      setContent(data.poem);
+      toast.success("Poem Generated", {
+        description: "Feel free to edit and enhance the generated poem.",
+      });
+    } catch (error) {
+      toast.error("Generation Failed", {
+        description: "Unable to generate poem. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setContent("");
     setFormState(DEFAULT_FORM_STATE);
@@ -134,6 +163,7 @@ export const usePoem = () => {
     shareDialogOpen,
     shareUrl,
     handleGenerate,
+    handleGenerateFast,
     handleReset,
     handleSave,
     handleShare,

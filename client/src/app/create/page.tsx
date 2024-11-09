@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout/Layout";
 import { PoemSettings } from "@/components/PoemCreator/PoemSettings";
@@ -32,6 +32,7 @@ const CreatePage = () => {
     shareDialogOpen,
     shareUrl,
     handleGenerate,
+    handleGenerateFast,
     handleReset,
     handleSave,
     handleShare,
@@ -41,6 +42,12 @@ const CreatePage = () => {
     setShareDialogOpen,
     setFormState,
   } = usePoem();
+
+  const [fastMode, setFastMode] = useState(false);
+
+  const handleFastModeChange = () => {
+    setFastMode((prev) => !prev);
+  };
 
   return (
     <Layout className="min-h-screen py-12">
@@ -75,10 +82,13 @@ const CreatePage = () => {
               content={content}
               setContent={setContent}
               isLoading={isLoading}
-              onGenerate={handleGenerate}
+              onGenerateNormal={handleGenerate}
+              onGenerateFast={handleGenerateFast}
               onReset={handleReset}
               onSave={handleSave}
               onShare={handleShare}
+              fastMode={fastMode}
+              onFastModeChange={handleFastModeChange}
             />
           </motion.div>
 

@@ -21,19 +21,21 @@ export const usePoem = () => {
   const [formState, setFormState] = useState<PoemFormState>(DEFAULT_FORM_STATE);
   const [progress, setProgress] = useState<string>(""); // For showing generation progress
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (userPrompt?: string) => {
     try {
       setIsLoading(true);
       setContent(""); // Clear any existing content
       setProgress("Starting poem generation..."); // Initial progress message
 
-      // Initial request to start generation
       const response = await fetch("/api/poem/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+          userPrompt, // Include the user's prompt if provided
+        }),
       });
 
       if (!response.ok) {
@@ -41,8 +43,6 @@ export const usePoem = () => {
       }
 
       const { jobId } = await response.json();
-
-      // Set up SSE connection
       const eventSource = new EventSource(`/api/poem/generate?jobId=${jobId}`);
 
       eventSource.onmessage = (event) => {
@@ -83,7 +83,6 @@ export const usePoem = () => {
         });
       };
 
-      // Cleanup on component unmount or when generation is cancelled
       return () => {
         eventSource.close();
       };
@@ -97,7 +96,7 @@ export const usePoem = () => {
     }
   };
 
-  const handleGenerateFast = async () => {
+  const handleGenerateFast = async (userPrompt?: string) => {
     try {
       setIsLoading(true);
       const response = await fetch("/api/poem/generate-fast", {
@@ -105,7 +104,10 @@ export const usePoem = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+          userPrompt, // Include the user's prompt if provided
+        }),
       });
 
       if (!response.ok) {

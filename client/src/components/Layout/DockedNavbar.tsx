@@ -1,11 +1,12 @@
 import React from "react";
 import Link from "next/link";
-import { 
-  HomeIcon, 
-  PenToolIcon, 
-  BookOpenIcon, 
-  HeartIcon, 
-  GraduationCapIcon 
+import {
+  HomeIcon,
+  PenToolIcon,
+  BookOpenIcon,
+  HeartIcon,
+  GraduationCapIcon,
+  Info,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const DATA = {
     { href: "/explore", icon: BookOpenIcon, label: "Explore" },
     { href: "/learn", icon: GraduationCapIcon, label: "Learn" },
     { href: "/favorites", icon: HeartIcon, label: "Favorites" },
+    { href: "/about", icon: Info, label: "About" },
   ],
   social: {
     github: {
@@ -54,7 +56,7 @@ export function DockedNavbar() {
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
       <TooltipProvider>
-        <Dock 
+        <Dock
           className="bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg"
           direction="middle"
         >
@@ -67,7 +69,7 @@ export function DockedNavbar() {
                     aria-label={item.label}
                     className={cn(
                       buttonVariants({ variant: "ghost", size: "icon" }),
-                      "size-12 rounded-full hover:bg-primary/10 hover:text-primary transition-colors",
+                      "size-12 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
                     )}
                   >
                     <item.icon className="size-4" />
@@ -79,9 +81,9 @@ export function DockedNavbar() {
               </Tooltip>
             </DockIcon>
           ))}
-          
+
           <Separator orientation="vertical" className="h-8" />
-          
+
           {Object.entries(DATA.social).map(([name, social]) => (
             <DockIcon key={name}>
               <Tooltip>
@@ -93,7 +95,7 @@ export function DockedNavbar() {
                     aria-label={social.name}
                     className={cn(
                       buttonVariants({ variant: "ghost", size: "icon" }),
-                      "size-12 rounded-full hover:bg-primary/10 hover:text-primary transition-colors",
+                      "size-12 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
                     )}
                   >
                     <social.icon className="size-4" />
@@ -105,9 +107,9 @@ export function DockedNavbar() {
               </Tooltip>
             </DockIcon>
           ))}
-          
+
           <Separator orientation="vertical" className="h-8" />
-          
+
           <DockIcon>
             <Tooltip>
               <TooltipTrigger asChild>

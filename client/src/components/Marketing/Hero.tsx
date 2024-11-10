@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Volume2, ArrowDownCircle } from 'lucide-react'
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface HeroProps {
   scrollToComponent: () => void;
@@ -139,8 +140,8 @@ const Hero = ({ scrollToComponent }: HeroProps) => {
             variants={fadeUpVariant}
             className="flex flex-col sm:flex-row items-center gap-4 pt-6"
           >
-            <Button size="lg" className="w-full sm:w-auto">
-              Begin Creating
+            <Button size="lg" className="w-full sm:w-auto" asChild>
+              <Link href="/create">Begin Creating</Link>
             </Button>
             <Button
               variant="ghost"

@@ -25,8 +25,8 @@ interface PoemEditorProps {
   setContent: (content: string) => void;
   isLoading: boolean;
   progress?: string; // Add progress prop
-  onGenerateNormal: () => void;
-  onGenerateFast: () => void;
+  onGenerateNormal: (userPrompt?: string) => void;
+  onGenerateFast: (userPrompt?: string) => void;
   onReset: () => void;
   onSave: () => void;
   onShare: () => void;
@@ -48,10 +48,11 @@ export const PoemEditor: React.FC<PoemEditorProps> = ({
   onFastModeChange,
 }) => {
   const handleGenerate = () => {
+    const userPrompt = content.trim();
     if (fastMode) {
-      onGenerateFast();
+      onGenerateFast(userPrompt || "");
     } else {
-      onGenerateNormal();
+      onGenerateNormal(userPrompt || "");
     }
   };
 

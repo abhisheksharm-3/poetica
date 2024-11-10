@@ -60,14 +60,13 @@ const jobStore = new JobStore();
 async function generatePoem(jobId: string, params: any) {
   try {
     const payload = {
-      data: [
-        params.style,
-        params.emotionalTone,
-        params.creativeStyle,
-        params.languageVariety,
-        params.length,
-        params.wordRepetition,
-      ],
+      prompt: params.userPrompt,
+      style: params.style,
+      emotionalTone: params.emotionalTone,
+      creativeStyle: params.creativeStyle,
+      languageVariety: params.languageVariety,
+      length: params.length,
+      wordRepetition: params.wordRepetition,
     };
 
     const response = await fetch(`${process.env.SERVER_URI}/generate`, {
@@ -155,6 +154,7 @@ async function handleSSE(request: Request) {
 async function handlePOST(request: Request) {
   const body = await request.json();
   const {
+    userPrompt,
     style,
     emotionalTone,
     creativeStyle,
@@ -168,6 +168,7 @@ async function handlePOST(request: Request) {
   const job = jobStore.createJob(newJobId);
 
   generatePoem(newJobId, {
+    userPrompt,
     style,
     emotionalTone,
     creativeStyle,

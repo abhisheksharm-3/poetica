@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     try {
         // Get parameters from request body
         const { 
-            topic,
+            userPrompt,
             style,
             emotionalTone,
             creativeStyle,
@@ -35,8 +35,13 @@ export async function POST(request: NextRequest) {
             wordRepetition 
         } = await request.json();
 
+        // Create base prompt based on whether user_prompt exists
+        const basePromptText = userPrompt
+            ? `Create a masterful ${length} poem that captures the essence of this prompt: ${userPrompt}. It may be anything and decode the context according to this emotional tone: ${emotionalTone}"`
+            : `Create a masterful ${length} poem that captures ${emotionalTone} emotions and reflections`;
+
         // Create prompt for the poem
-        const prompt = `Create a masterful ${length} poem that captures the essence of "${topic}".
+        const prompt = `${basePromptText}
 
         Technical Parameters:
         - Form: ${style}
@@ -51,7 +56,8 @@ export async function POST(request: NextRequest) {
         - Incorporate subtle literary devices
         - Ensure emotional depth through careful word choice
         - Create memorable and impactful lines
-        - Balance complexity with accessibility
+        - Balance complexity with accessibility${userPrompt ? `
+        - Naturally incorporate themes and elements from the given prompt` : ''}
 
         Return only the poem without additional text or explanations. Avoid content that could trigger safety filters.`;
 
@@ -59,7 +65,7 @@ export async function POST(request: NextRequest) {
         const model = genAI.getGenerativeModel({ 
             model: 'gemini-1.5-flash',
             safetySettings,
-    });
+        });
 
         // Generate poem
         const result = await model.generateContent(prompt);

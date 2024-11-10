@@ -17,6 +17,7 @@ ENV HF_HOME="/tmp/poetica-cache"
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -m 777 /tmp/poetica-cache
+RUN chmod 777 /app
 
 # Copy the application code
 COPY . .

@@ -41,6 +41,7 @@ const CreatePage = () => {
     setSaveDialogOpen,
     setShareDialogOpen,
     setFormState,
+    progress,
   } = usePoem();
 
   const [fastMode, setFastMode] = useState(false);
@@ -89,6 +90,7 @@ const CreatePage = () => {
               onShare={handleShare}
               fastMode={fastMode}
               onFastModeChange={handleFastModeChange}
+              progress={progress}
             />
           </motion.div>
 

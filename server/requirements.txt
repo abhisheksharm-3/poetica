@@ -18,3 +18,5 @@ accelerate==0.27.2
 python-jose==3.3.0  # for JWT handling if you add auth later
 gunicorn==21.2.0    # for production deployment
 python-dotenv==1.0.0  # for environment variables
+ctransformers
+pyllamacpp==2.4.0

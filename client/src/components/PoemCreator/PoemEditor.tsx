@@ -17,11 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import AnimatedShinyText from "../ui/animated-shiny-text";
+import { RainbowButton } from "../ui/rainbow-button";
 
 interface PoemEditorProps {
   content: string;
   setContent: (content: string) => void;
   isLoading: boolean;
+  progress?: string; // Add progress prop
   onGenerateNormal: () => void;
   onGenerateFast: () => void;
   onReset: () => void;
@@ -35,6 +38,7 @@ export const PoemEditor: React.FC<PoemEditorProps> = ({
   content,
   setContent,
   isLoading,
+  progress,
   onGenerateNormal,
   onGenerateFast,
   onReset,
@@ -86,7 +90,7 @@ export const PoemEditor: React.FC<PoemEditorProps> = ({
         <div className="relative">
           <Textarea
             placeholder="Your poem will appear here..."
-            className="min-h-[400px] p-6 resize-none font-serif text-lg leading-relaxed focus-visible:ring-1 bg-muted/5 rounded-lg"
+            className="min-h-[400px] p-6 resize-none font-serif text-lg leading-relaxed focus-visible:ring-1 bg-muted/5 rounded-lg hide-scrollbar"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
@@ -112,34 +116,43 @@ export const PoemEditor: React.FC<PoemEditorProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <Button
-            size="default"
-            className="gap-2 px-6"
-            onClick={handleGenerate}
-            disabled={isLoading}
-          >
-            <Wand2 className="h-4 w-4" />
-            {isLoading ? "Generating..." : "Generate Poem"}
-          </Button>
+        <div className="flex flex-col space-y-3">
+          {/* Progress indicator */}
+          {isLoading && progress && (
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-1 bg-primary rounded-full animate-pulse" />
+              <AnimatedShinyText className="text-sm text-muted-foreground">{progress}</AnimatedShinyText>
+            </div>
+          )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-10 w-10">
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onSave} className="gap-2">
-                <SaveIcon className="h-4 w-4" />
-                Save poem
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onShare} className="gap-2">
-                <Share2 className="h-4 w-4" />
-                Share poem
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center justify-between">
+            <RainbowButton
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 py-2 gap-2 px-6"
+              onClick={handleGenerate}
+              disabled={isLoading}
+            >
+              <Wand2 className="h-4 w-4" />
+              {isLoading ? "Generating..." : "Generate Poem"}
+            </RainbowButton>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onSave} className="gap-2">
+                  <SaveIcon className="h-4 w-4" />
+                  Save poem
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onShare} className="gap-2">
+                  <Share2 className="h-4 w-4" />
+                  Share poem
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardContent>
     </Card>

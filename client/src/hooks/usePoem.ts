@@ -19,10 +19,15 @@ export const usePoem = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [formState, setFormState] = useState<PoemFormState>(DEFAULT_FORM_STATE);
+  const [progress, setProgress] = useState<string>(""); // For showing generation progress
 
   const handleGenerate = async () => {
     try {
       setIsLoading(true);
+      setContent(""); // Clear any existing content
+      setProgress("Starting poem generation..."); // Initial progress message
+
+      // Initial request to start generation
       const response = await fetch("/api/poem/generate", {
         method: "POST",
         headers: {
@@ -32,20 +37,63 @@ export const usePoem = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate poem");
+        throw new Error("Failed to initiate poem generation");
       }
 
-      const data = await response.json();
-      setContent(data.poem);
-      toast.success("Poem Generated", {
-        description: "Feel free to edit and enhance the generated poem.",
-      });
+      const { jobId } = await response.json();
+
+      // Set up SSE connection
+      const eventSource = new EventSource(`/api/poem/generate?jobId=${jobId}`);
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        switch (data.status) {
+          case 'pending':
+            setProgress("Generating your poem...");
+            break;
+            
+          case 'completed':
+            eventSource.close();
+            setContent(data.result);
+            setProgress("");
+            setIsLoading(false);
+            toast.success("Poem Generated", {
+              description: "Feel free to edit and enhance the generated poem.",
+            });
+            break;
+            
+          case 'failed':
+            eventSource.close();
+            setProgress("");
+            setIsLoading(false);
+            toast.error("Generation Failed", {
+              description: data.error || "Unable to generate poem. Please try again.",
+            });
+            break;
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        eventSource.close();
+        setProgress("");
+        setIsLoading(false);
+        toast.error("Generation Failed", {
+          description: "Connection lost. Please try again.",
+        });
+      };
+
+      // Cleanup on component unmount or when generation is cancelled
+      return () => {
+        eventSource.close();
+      };
+
     } catch (error) {
-      toast.error("Generation Failed", {
-        description: "Unable to generate poem. Please try again.",
-      });
-    } finally {
+      setProgress("");
       setIsLoading(false);
+      toast.error("Generation Failed", {
+        description: "Unable to start poem generation. Please try again.",
+      });
     }
   };
 
@@ -162,6 +210,7 @@ export const usePoem = () => {
     saveDialogOpen,
     shareDialogOpen,
     shareUrl,
+    progress,
     handleGenerate,
     handleGenerateFast,
     handleReset,

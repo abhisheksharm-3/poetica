@@ -1,4 +1,4 @@
-import { SavedPoem } from "@/lib/types";
+import { SavedPoem } from "@/Lib/types";
 import { NextResponse } from "next/server";
 
 // Mock database

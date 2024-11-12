@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { PoemFormState } from "@/lib/types";
+import { PoemFormState } from "@/Lib/types";
 
 interface PoemSettingsProps {
   formState: PoemFormState;

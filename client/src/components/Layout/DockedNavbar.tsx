@@ -9,7 +9,6 @@ import {
   Info,
 } from "lucide-react";
 
-import { cn } from "@/lib/Utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Dock, DockIcon } from "@/components/ui/dock";
+import { cn } from "../../lib/utils";
 
 export type IconProps = React.HTMLAttributes<SVGElement>;
 

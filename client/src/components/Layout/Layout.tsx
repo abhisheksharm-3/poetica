@@ -1,5 +1,5 @@
 "use client"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/Utils";
 import { ReactNode } from "react";
 import { DockedNavbar } from "./DockedNavbar";
 import Footer from "./Footer";

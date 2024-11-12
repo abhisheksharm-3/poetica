@@ -42,9 +42,9 @@ class EmotionalTone(str, Enum):
     ROMANTIC = "romantic"
 
 class Length(str, Enum):
-    SHORT = "short"  # 100 words
-    MEDIUM = "medium"  # 200 words
-    LONG = "long"  # 300 words
+    SHORT = "short"
+    MEDIUM = "medium"
+    LONG = "long"
 
 @dataclass
 class StyleConfig:
@@ -110,29 +110,34 @@ class StyleMapper:
 class GenerateRequest(BaseModel):
     prompt: str
     style: PoemStyle
-    emotionalTone: EmotionalTone
-    creativeStyle: float = Field(ge=0, le=100)  # 0-100 slider
-    languageVariety: float = Field(ge=0, le=1)  # 0-1 slider
+    emotional_tone: EmotionalTone  # Use 'emotional_tone' directly
+    creative_style: float = Field(ge=0, le=100)  # 0-100 slider
+    language_variety: float = Field(ge=0, le=1)  # 0-1 slider
     length: Length
-    wordRepetition: float = Field(ge=1, le=2)  # 1-2 slider
+    word_repetition: float = Field(ge=1, le=2)  # 1-2 slider
 
-    @validator('creativeStyle')
+    @validator('creative_style')
     def validate_creative_style(cls, v):
         if not 0 <= v <= 100:
-            raise ValueError('creativeStyle must be between 0 and 100')
+            raise ValueError('creative_style must be between 0 and 100')
         return v
 
-    @validator('languageVariety')
+    @validator('language_variety')
     def validate_language_variety(cls, v):
         if not 0 <= v <= 1:
-            raise ValueError('languageVariety must be between 0 and 1')
+            raise ValueError('language_variety must be between 0 and 1')
         return v
 
-    @validator('wordRepetition')
+    @validator('word_repetition')
     def validate_word_repetition(cls, v):
         if not 1 <= v <= 2:
-            raise ValueError('wordRepetition must be between 1 and 2')
+            raise ValueError('word_repetition must be between 1 and 2')
         return v
+
+
+    class Config:
+        allow_population_by_field_name = True
+
 
 class ModelManager:
     def __init__(self):
@@ -272,11 +277,11 @@ class ModelManager:
         # Get style configuration
         style_config = StyleMapper.get_style_config(
             request.style,
-            request.emotionalTone,
-            request.creativeStyle,
-            request.languageVariety,
+            request.emotional_tone,
+            request.creative_style,
+            request.language_variety,
             request.length,
-            request.wordRepetition
+            request.word_repetition
         )
         
         try:

@@ -1,4 +1,4 @@
-import { SavedPoem } from "@/utils/types";
+import { SavedPoem } from "@/lib/types";
 import { NextResponse } from "next/server";
 
 const savedPoems: SavedPoem[] = [];

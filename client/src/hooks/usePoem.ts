@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
 import { toast } from "sonner";
-import { PoemFormState } from "@/utils/types";
+import { PoemFormState } from "@/lib/types";
 
 const DEFAULT_FORM_STATE: PoemFormState = {
   style: "sonnet",

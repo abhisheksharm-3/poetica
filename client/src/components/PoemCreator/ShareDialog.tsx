@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Copy, X } from "lucide-react";
-import { PoemFormState } from "@/utils/types";
+import { PoemFormState } from "@/lib/types";
 
 interface ShareDialogProps {
   open: boolean;

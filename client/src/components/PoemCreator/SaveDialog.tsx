@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Check } from "lucide-react";
-import { PoemFormState } from "@/lib/types";
+import { PoemFormState } from "@/utils/types";
 
 interface SaveDialogProps {
   open: boolean;

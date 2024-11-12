@@ -1,4 +1,4 @@
-import { SharedPoem } from "@/lib/types";
+import { SharedPoem } from "@/utils/types";
 import { NextResponse } from "next/server";
 
 // Mock sharing functionality

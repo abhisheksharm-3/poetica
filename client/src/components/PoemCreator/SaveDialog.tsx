@@ -23,7 +23,6 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
   open,
   onOpenChange,
   formState,
-  content,
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,12 +47,6 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
             <div>{formState.length}</div>
             <div className="font-medium">Word Repetition:</div>
             <div>{formState.wordRepetition}</div>
-          </div>
-          <div className="mt-4">
-            <div className="font-medium mb-2">Content Preview:</div>
-            <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto">
-              {content.substring(0, 150)}...
-            </div>
           </div>
         </div>
         <DialogFooter>

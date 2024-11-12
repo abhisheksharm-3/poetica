@@ -25,7 +25,6 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
   onOpenChange,
   shareUrl,
   formState,
-  content,
   onCopy,
 }) => {
   return (
@@ -54,10 +53,6 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
             <div>{formState.style}</div>
             <div className="font-medium">Emotional Tone:</div>
             <div>{formState.emotionalTone}</div>
-            <div className="font-medium">Preview:</div>
-            <div className="text-muted-foreground">
-              {content.substring(0, 50)}...
-            </div>
           </div>
         </div>
         <DialogFooter>

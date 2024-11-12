@@ -62,11 +62,11 @@ async function generatePoem(jobId: string, params: any) {
     const payload = {
       prompt: params.userPrompt,
       style: params.style,
-      emotionalTone: params.emotionalTone,
-      creativeStyle: params.creativeStyle,
-      languageVariety: params.languageVariety,
+      emotional_tone: params.emotionalTone,
+      creative_style: params.creativeStyle,
+      language_variety: params.languageVariety,
       length: params.length,
-      wordRepetition: params.wordRepetition,
+      word_repetition: params.wordRepetition,
     };
 
     const response = await fetch(`${process.env.SERVER_URI}/generate`, {

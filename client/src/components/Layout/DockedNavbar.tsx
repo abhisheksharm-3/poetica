@@ -9,7 +9,7 @@ import {
   Info,
 } from "lucide-react";
 
-import { cn } from "@/Lib/utils";
+import { cn } from "@/utils/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {

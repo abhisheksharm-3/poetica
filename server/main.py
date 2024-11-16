@@ -1,345 +1,366 @@
 import os
-import shutil
-from typing import Optional, Dict, Any, Literal
-from enum import Enum
-from fastapi import FastAPI, HTTPException, status
-from pathlib import Path
+from typing import Optional, Dict, Any, List
+from fastapi import FastAPI, HTTPException, status, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import logging
 import sys
 from pydantic import BaseModel, Field, validator
-from ctransformers import AutoModelForCausalLM
-from dataclasses import dataclass
+import torch
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Config
+from contextlib import asynccontextmanager
+import asyncio
+from functools import lru_cache
+import numpy as np
+from datetime import datetime
+import re
 
 # Constants
-BASE_DIR = Path("/app")
-MODEL_DIR = BASE_DIR / "models"
-MODEL_NAME = "llama-2-7b-chat.q4_K_M.gguf"
-MODEL_PATH = MODEL_DIR / MODEL_NAME
-MODEL_URL = "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf"
+BASE_MODEL_DIR = "./models/"
+MODEL_PATH = os.path.join(BASE_MODEL_DIR, "poeticagpt.pth")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+BATCH_SIZE = 4
+CACHE_SIZE = 1024
 
-# Logging configuration
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('model_loading.log')
-    ]
+MODEL_CONFIG = GPT2Config(
+    n_positions=128,
+    n_ctx=128,
+    n_embd=384,
+    n_layer=6,
+    n_head=6,
+    vocab_size=50257,
+    bos_token_id=50256,
+    eos_token_id=50256,
+    use_cache=True,
 )
-logger = logging.getLogger(__name__)
-
-# Aligned with frontend enums
-class PoemStyle(str, Enum):
-    SONNET = "sonnet"
-    HAIKU = "haiku"
-    FREE_VERSE = "free-verse"
-    VILLANELLE = "villanelle"
-
-class EmotionalTone(str, Enum):
-    CONTEMPLATIVE = "contemplative"
-    JOYFUL = "joyful"
-    MELANCHOLIC = "melancholic"
-    ROMANTIC = "romantic"
-
-class Length(str, Enum):
-    SHORT = "short"
-    MEDIUM = "medium"
-    LONG = "long"
-
-@dataclass
-class StyleConfig:
-    """Maps style parameters to model parameters"""
-    temperature: float
-    top_p: float
-    top_k: int
-    repetition_penalty: float
-    max_tokens: int
-
-class StyleMapper:
-    """Maps style preferences to model parameters"""
-    
-    @staticmethod
-    def get_style_config(
-        style: PoemStyle,
-        emotional_tone: EmotionalTone,
-        creative_style: float,  # 0-100
-        language_variety: float,  # 0-1
-        length: Length,
-        word_repetition: float,  # 1-2
-    ) -> StyleConfig:
-        # Base configuration
-        config = {
-            "temperature": 0.7,
-            "top_p": 0.9,
-            "top_k": 40,
-            "repetition_penalty": 1.1,
-            "max_tokens": 512
-        }
-        
-        # Map creative_style (0-100) to temperature (0.5-1.0)
-        config["temperature"] = 0.5 + (creative_style / 100) * 0.5
-        
-        # Map length to tokens (assuming average word is 5 tokens)
-        length_token_map = {
-            Length.SHORT: 500,    # ~100 words
-            Length.MEDIUM: 1000,  # ~200 words
-            Length.LONG: 1500,    # ~300 words
-        }
-        config["max_tokens"] = length_token_map[length]
-        
-        # Map language_variety (0-1) to top_p
-        config["top_p"] = 0.7 + (language_variety * 0.3)
-        
-        # Map word_repetition (1-2) to repetition_penalty
-        config["repetition_penalty"] = word_repetition
-        
-        # Adjust based on emotional tone
-        tone_temp_adjustment = {
-            EmotionalTone.CONTEMPLATIVE: 0.0,
-            EmotionalTone.JOYFUL: 0.1,
-            EmotionalTone.MELANCHOLIC: -0.1,
-            EmotionalTone.ROMANTIC: 0.2
-        }
-        config["temperature"] += tone_temp_adjustment[emotional_tone]
-        
-        # Clamp temperature between 0.5 and 1.0
-        config["temperature"] = max(0.5, min(1.0, config["temperature"]))
-        
-        return StyleConfig(**config)
 
 class GenerateRequest(BaseModel):
-    prompt: str
-    style: PoemStyle
-    emotional_tone: EmotionalTone  # Use 'emotional_tone' directly
-    creative_style: float = Field(ge=0, le=100)  # 0-100 slider
-    language_variety: float = Field(ge=0, le=1)  # 0-1 slider
-    length: Length
-    word_repetition: float = Field(ge=1, le=2)  # 1-2 slider
-
-    @validator('creative_style')
-    def validate_creative_style(cls, v):
-        if not 0 <= v <= 100:
-            raise ValueError('creative_style must be between 0 and 100')
+    prompt: str = Field(..., min_length=1, max_length=500)
+    max_length: Optional[int] = Field(default=100, ge=10, le=500)
+    temperature: float = Field(default=0.9, ge=0.1, le=2.0)
+    top_k: int = Field(default=50, ge=1, le=100)
+    top_p: float = Field(default=0.95, ge=0.1, le=1.0)
+    repetition_penalty: float = Field(default=1.2, ge=1.0, le=2.0)
+    style: Optional[str] = Field(default="free_verse", 
+                                description="Poetry style: free_verse, haiku, sonnet")
+    
+    @validator('prompt')
+    def validate_prompt(cls, v):
+        v = ' '.join(v.split())
         return v
 
-    @validator('language_variety')
-    def validate_language_variety(cls, v):
-        if not 0 <= v <= 1:
-            raise ValueError('language_variety must be between 0 and 1')
-        return v
+class PoemFormatter:
+    """Handles poem formatting and processing"""
+    
+    @staticmethod
+    def format_free_verse(text: str) -> List[str]:
+        lines = re.split(r'[.!?]+|\n+', text)
+        lines = [line.strip() for line in lines if line.strip()]
+        formatted_lines = []
+        for line in lines:
+            if len(line) > 40:
+                parts = line.split(',')
+                formatted_lines.extend(part.strip() for part in parts if part.strip())
+            else:
+                formatted_lines.append(line)
+        return formatted_lines
 
-    @validator('word_repetition')
-    def validate_word_repetition(cls, v):
-        if not 1 <= v <= 2:
-            raise ValueError('word_repetition must be between 1 and 2')
-        return v
+    @staticmethod
+    def format_haiku(text: str) -> List[str]:
+        words = text.split()
+        lines = []
+        current_line = []
+        syllable_count = 0
+        
+        for word in words:
+            syllables = len(re.findall(r'[aeiou]+', word.lower()))
+            if syllable_count + syllables <= 5 and len(lines) == 0:
+                current_line.append(word)
+                syllable_count += syllables
+            elif syllable_count + syllables <= 7 and len(lines) == 1:
+                current_line.append(word)
+                syllable_count += syllables
+            elif syllable_count + syllables <= 5 and len(lines) == 2:
+                current_line.append(word)
+                syllable_count += syllables
+            else:
+                if current_line:
+                    lines.append(' '.join(current_line))
+                    current_line = [word]
+                    syllable_count = syllables
+            
+            if len(lines) == 3:
+                break
+                
+        if current_line and len(lines) < 3:
+            lines.append(' '.join(current_line))
+            
+        return lines[:3]
 
-
-    class Config:
-        allow_population_by_field_name = True
-
+    @staticmethod
+    def format_sonnet(text: str) -> List[str]:
+        words = text.split()
+        lines = []
+        current_line = []
+        target_line_length = 10
+        
+        for word in words:
+            current_line.append(word)
+            if len(current_line) >= target_line_length:
+                lines.append(' '.join(current_line))
+                current_line = []
+                
+            if len(lines) >= 14:
+                break
+                
+        if current_line and len(lines) < 14:
+            lines.append(' '.join(current_line))
+            
+        return lines[:14]
 
 class ModelManager:
     def __init__(self):
         self.model = None
+        self.tokenizer = None
+        self._lock = asyncio.Lock()
+        self.request_count = 0
+        self.last_cleanup = datetime.now()
+        self.poem_formatter = PoemFormatter()
         
-    def ensure_model_directory(self):
-        """Ensure the model directory exists and is writable"""
+    async def initialize(self) -> bool:
         try:
-            MODEL_DIR.mkdir(parents=True, exist_ok=True)
+            self._setup_logging()
             
-            # Verify directory exists and is writable
-            if not MODEL_DIR.exists():
-                raise RuntimeError(f"Failed to create directory: {MODEL_DIR}")
-            if not os.access(MODEL_DIR, os.W_OK):
-                raise RuntimeError(f"Directory not writable: {MODEL_DIR}")
-                
-            logger.info(f"Model directory verified: {MODEL_DIR}")
-        except Exception as e:
-            logger.error(f"Error setting up model directory: {str(e)}")
-            raise
-    
-    async def initialize(self):
-        """Initialize the model with error handling"""
-        try:
-            # Ensure directory exists before attempting download
-            self.ensure_model_directory()
+            logger.info(f"Initializing model on device: {DEVICE}")
             
-            if not MODEL_PATH.exists():
-                await self.download_model()
+            self.tokenizer = await self._load_tokenizer()
+            await self._load_and_optimize_model()
             
-            self.model = self.initialize_model(MODEL_PATH)
-            return self.model is not None
-        except Exception as e:
-            logger.error(f"Initialization failed: {str(e)}")
-            return False
-    
-    @staticmethod
-    async def download_model():
-        """Download the model if it doesn't exist"""
-        import requests
-        from tqdm import tqdm
-        
-        if MODEL_PATH.exists():
-            logger.info(f"Model already exists at {MODEL_PATH}")
-            return
-        
-        # Create a temporary file for downloading
-        temp_path = MODEL_PATH.with_suffix('.temp')
-        
-        logger.info(f"Downloading model to temporary file: {temp_path}")
-        try:
-            response = requests.get(MODEL_URL, stream=True)
-            response.raise_for_status()
-            total_size = int(response.headers.get('content-length', 0))
-            
-            # Ensure we have enough disk space
-            free_space = shutil.disk_usage(MODEL_DIR).free
-            if free_space < total_size * 1.1:  # 10% buffer
-                raise RuntimeError(
-                    f"Insufficient disk space. Need {total_size * 1.1 / (1024**3):.2f}GB, "
-                    f"have {free_space / (1024**3):.2f}GB"
-                )
-            
-            # Download to temporary file first
-            with open(temp_path, 'wb') as file, tqdm(
-                desc="Downloading",
-                total=total_size,
-                unit='iB',
-                unit_scale=True,
-                unit_divisor=1024,
-            ) as pbar:
-                for data in response.iter_content(chunk_size=8192):
-                    size = file.write(data)
-                    pbar.update(size)
-            
-            # Verify file size
-            if temp_path.stat().st_size != total_size:
-                raise RuntimeError(
-                    f"Downloaded file size ({temp_path.stat().st_size}) "
-                    f"doesn't match expected size ({total_size})"
-                )
-            
-            # Move temporary file to final location
-            temp_path.rename(MODEL_PATH)
-            logger.info(f"Model downloaded successfully to {MODEL_PATH}")
-            
-        except Exception as e:
-            logger.error(f"Error downloading model: {str(e)}")
-            # Clean up temporary file if it exists
-            if temp_path.exists():
-                temp_path.unlink()
-            # Clean up partial download if it exists
-            if MODEL_PATH.exists():
-                MODEL_PATH.unlink()
-            raise RuntimeError(f"Model download failed: {str(e)}")
-
-    def initialize_model(self, model_path: Path):
-        """Initialize the model with the specified configuration"""
-        try:
-            if not model_path.exists():
-                raise FileNotFoundError(f"Model file not found: {model_path}")
-                
-            if not model_path.is_file():
-                raise RuntimeError(f"Model path is not a file: {model_path}")
-                
-            if not os.access(model_path, os.R_OK):
-                raise RuntimeError(f"Model file is not readable: {model_path}")
-            
-            logger.info(f"Initializing model from: {model_path}")
-            model = AutoModelForCausalLM.from_pretrained(
-                str(model_path.parent),
-                model_file=model_path.name,
-                model_type="llama",
-                max_new_tokens=1500,
-                context_length=2048,
-                gpu_layers=0
-            )
-            
-            if model is None:
-                raise RuntimeError("Model initialization returned None")
-                
-            logger.info("Model initialized successfully")
-            return model
+            logger.info("Model and tokenizer loaded successfully")
+            return True
             
         except Exception as e:
             logger.error(f"Error initializing model: {str(e)}")
-            return None
+            logger.exception("Detailed traceback:")
+            return False
 
-    def generate(self, request: GenerateRequest) -> Dict[str, Any]:
-        """Generate text based on the request and style parameters"""
-        if self.model is None:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Model not loaded"
-            )
+    @staticmethod
+    def _setup_logging():
+        global logger
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
         
-        # Get style configuration
-        style_config = StyleMapper.get_style_config(
-            request.style,
-            request.emotional_tone,
-            request.creative_style,
-            request.language_variety,
-            request.length,
-            request.word_repetition
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
         
+        handlers = [logging.StreamHandler(sys.stdout)]
+        
         try:
-            # Prepare prompt based on style
-            style_prompts = {
-                PoemStyle.SONNET: "Write a sonnet about",
-                PoemStyle.HAIKU: "Write a haiku about",
-                PoemStyle.FREE_VERSE: "Write a free verse poem about",
-                PoemStyle.VILLANELLE: "Write a villanelle about"
-            }
-            
-            styled_prompt = f"{style_prompts[request.style]} {request.prompt}"
-            
-            response = self.model(
-                styled_prompt,
-                max_new_tokens=style_config.max_tokens,
-                temperature=style_config.temperature,
-                top_p=style_config.top_p,
-                top_k=style_config.top_k,
-                repetition_penalty=style_config.repetition_penalty
-            )
-            
-            return {
-                "generated_text": response,
-                "prompt": styled_prompt,
-                "style_config": style_config.__dict__
-            }
+            log_dir = os.path.join(os.getcwd(), 'logs')
+            os.makedirs(log_dir, exist_ok=True)
+            handlers.append(logging.FileHandler(
+                os.path.join(log_dir, f'poetry_generation_{datetime.now().strftime("%Y%m%d")}.log')
+            ))
         except Exception as e:
-            logger.error(f"Error generating text: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=str(e)
-            )
+            print(f"Warning: Could not create log file: {e}")
+        
+        for handler in handlers:
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
 
-# Create FastAPI app and model manager
-app = FastAPI(title="Poetry Generation API")
+    @lru_cache(maxsize=CACHE_SIZE)
+    async def _load_tokenizer(self):
+        tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
+        return tokenizer
+
+    async def _load_and_optimize_model(self):
+        if not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+        
+        self.model = GPT2LMHeadModel(MODEL_CONFIG)
+        
+        state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+        self.model.load_state_dict(state_dict, strict=False)
+        
+        self.model.to(DEVICE)
+        self.model.eval()
+        
+        if DEVICE.type == 'cuda':
+            torch.backends.cudnn.benchmark = True
+            self.model = torch.jit.script(self.model)
+            
+        dummy_input = torch.zeros((1, 1), dtype=torch.long, device=DEVICE)
+        with torch.no_grad():
+            self.model(dummy_input)
+
+    @torch.no_grad()
+    async def generate(self, request: GenerateRequest) -> Dict[str, Any]:
+        async with self._lock:
+            try:
+                self.request_count += 1
+                await self._check_cleanup()
+                
+                inputs = await self._prepare_inputs(request.prompt)
+                outputs = await self._generate_optimized(inputs, request)
+                
+                return await self._process_outputs(outputs, request)
+                
+            except Exception as e:
+                logger.error(f"Error generating text: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=str(e)
+                )
+
+    async def _prepare_inputs(self, prompt: str):
+        poetry_prompt = f"Write a poem about: {prompt}\n\nPoem:"
+        tokens = self.tokenizer.encode(poetry_prompt, return_tensors='pt')
+        return tokens.to(DEVICE)
+
+    async def _generate_optimized(self, inputs, request: GenerateRequest):
+        attention_mask = torch.ones(inputs.shape, dtype=torch.long, device=DEVICE)
+        
+        style_params = {
+            "haiku": {"max_length": 50, "repetition_penalty": 1.3},
+            "sonnet": {"max_length": 200, "repetition_penalty": 1.2},
+            "free_verse": {"max_length": request.max_length, "repetition_penalty": request.repetition_penalty}
+        }
+        
+        params = style_params.get(request.style, style_params["free_verse"])
+        
+        return self.model.generate(
+            inputs,
+            attention_mask=attention_mask,
+            max_length=params["max_length"],
+            num_return_sequences=1,
+            temperature=request.temperature,
+            top_k=request.top_k,
+            top_p=request.top_p,
+            repetition_penalty=params["repetition_penalty"],
+            do_sample=True,
+            pad_token_id=self.tokenizer.eos_token_id,
+            use_cache=True,
+            no_repeat_ngram_size=3,
+            early_stopping=True,
+            bad_words_ids=[[self.tokenizer.encode(word)[0]] for word in 
+                          ['http', 'www', 'com', ':', '/', '#']],
+            min_length=20,
+        )
+
+    async def _process_outputs(self, outputs, request: GenerateRequest):
+        raw_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        
+        prompt_pattern = f"Write a poem about: {request.prompt}\n\nPoem:"
+        poem_text = raw_text.replace(prompt_pattern, '').strip()
+        
+        if request.style == "haiku":
+            formatted_lines = PoemFormatter.format_haiku(poem_text)
+        elif request.style == "sonnet":
+            formatted_lines = PoemFormatter.format_sonnet(poem_text)
+        else:
+            formatted_lines = PoemFormatter.format_free_verse(poem_text)
+        
+        return {
+            "poem": {
+                "title": self._generate_title(poem_text),
+                "lines": formatted_lines,
+                "style": request.style
+            },
+            "original_prompt": request.prompt,
+            "parameters": {
+                "max_length": request.max_length,
+                "temperature": request.temperature,
+                "top_k": request.top_k,
+                "top_p": request.top_p,
+                "repetition_penalty": request.repetition_penalty
+            },
+            "metadata": {
+                "device": DEVICE.type,
+                "model_type": "GPT2",
+                "timestamp": datetime.now().isoformat()
+            }
+        }
+
+    def _generate_title(self, poem_text: str) -> str:
+        words = poem_text.split()[:6]
+        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to'}
+        key_words = [word for word in words if word.lower() not in stop_words]
+        
+        if key_words:
+            title = ' '.join(key_words[:3]).capitalize()
+            return title
+        return "Untitled"
+
+    async def _check_cleanup(self):
+        if self.request_count % 100 == 0:
+            if DEVICE.type == 'cuda':
+                torch.cuda.empty_cache()
+            self.last_cleanup = datetime.now()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if not await model_manager.initialize():
+        logger.error("Failed to initialize model manager")
+    yield
+    if model_manager.model is not None:
+        del model_manager.model
+    if model_manager.tokenizer is not None:
+        del model_manager.tokenizer
+    if DEVICE.type == 'cuda':
+        torch.cuda.empty_cache()
+
+app = FastAPI(
+    title="Poetry Generation API",
+    description="Optimized API for generating poetry using GPT-2",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 model_manager = ModelManager()
-
-@app.on_event("startup")
-async def startup():
-    """Initialize the model during startup"""
-    await model_manager.initialize()
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     return {
         "status": "healthy",
-        "model_loaded": model_manager.model is not None
+        "model_loaded": model_manager.model is not None,
+        "tokenizer_loaded": model_manager.tokenizer is not None,
+        "device": DEVICE.type,
+        "request_count": model_manager.request_count,
+        "last_cleanup": model_manager.last_cleanup.isoformat(),
+        "system_info": {
+            "cuda_available": torch.cuda.is_available(),
+            "cuda_device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+        }
     }
 
 @app.post("/generate")
-async def generate_text(request: GenerateRequest):
-    """Generate text with style parameters"""
-    return model_manager.generate(request)
-
-@app.on_event("shutdown")
-async def shutdown():
-    """Cleanup on shutdown"""
-    if model_manager.model is not None:
-        del model_manager.model
+async def generate_text(
+    request: GenerateRequest,
+    background_tasks: BackgroundTasks
+):
+    try:
+        result = await model_manager.generate(request)
+        
+        if model_manager.request_count % 100 == 0:
+            background_tasks.add_task(torch.cuda.empty_cache)
+        
+        return JSONResponse(
+            content=result,
+            status_code=status.HTTP_200_OK
+        )
+    except Exception as e:
+        logger.error(f"Error in generate_text: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

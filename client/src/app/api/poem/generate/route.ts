@@ -1,206 +1,281 @@
-import { NextResponse } from "next/server";
-import crypto from "crypto";
-import { headers } from "next/headers";
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import { NextResponse } from 'next/server';
 
-// Event emitter for handling SSE
-import { EventEmitter } from "events";
-const eventEmitter = new EventEmitter();
-eventEmitter.setMaxListeners(100);
+// Initialize Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
 
-type JobStatus = "pending" | "completed" | "failed";
+const safetySettings = [
+    {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+];
 
-interface Job {
-  id: string;
-  status: JobStatus;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  result?: any;
-  error?: string;
-  timestamp: number;
+type PoemStyle = "sonnet" | "haiku" | "free-verse" | "villanelle";
+type EmotionalTone = "contemplative" | "joyful" | "melancholic" | "romantic";
+type PoemLength = "short" | "medium" | "long";
+
+interface FrontendParams {
+  userPrompt: string;
+  style: PoemStyle;
+  emotionalTone: EmotionalTone;
+  creativeStyle: number;  // 0-100 slider
+  languageVariety: number;  // 0-1 slider
+  length: PoemLength;
+  wordRepetition: number;  // 1-2 slider
 }
 
-class JobStore {
-  private store: Map<string, Job> = new Map();
-
-  private cleanup() {
-    const now = Date.now();
-    for (const [id, job] of this.store.entries()) {
-      if (now - job.timestamp > 60 * 60 * 1000) {
-        this.store.delete(id);
-      }
-    }
-  }
-
-  createJob(id: string): Job {
-    const job: Job = {
-      id,
-      status: "pending",
-      timestamp: Date.now(),
-    };
-    this.store.set(id, job);
-    this.cleanup();
-    return job;
-  }
-
-  getJob(id: string): Job | undefined {
-    return this.store.get(id);
-  }
-
-  updateJob(id: string, updates: Partial<Job>) {
-    const job = this.store.get(id);
-    if (job) {
-      const updatedJob = { ...job, ...updates };
-      this.store.set(id, updatedJob);
-      eventEmitter.emit(`job-${id}`, updatedJob);
-    }
-  }
+interface BackendParams {
+  prompt: string;
+  max_length: number;
+  temperature: number;
+  top_k: number;
+  top_p: number;
+  repetition_penalty: number;
 }
 
-const jobStore = new JobStore();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function generatePoem(jobId: string, params: any) {
+interface ValidationFeedback {
+  styleMatch: boolean;
+  toneMatch: boolean;
+  lengthMatch: boolean;
+  suggestions?: string;
+}
+
+interface ValidationResponse {
+  isValid: boolean;
+  feedback: ValidationFeedback;
+  reformattedPoem?: string;
+}
+
+interface PoemValidationRequest {
+  poem: string;
+  originalParams: FrontendParams;
+  backendParams: BackendParams;
+}
+
+interface GenerationResponse {
+  poem: string;
+  validationFeedback?: ValidationFeedback;
+}
+
+interface StyleConfig {
+  temperature: number;
+  top_p: number;
+  structure: string;
+}
+
+// Parameter Mapping Functions
+function mapStyle(style: PoemStyle): StyleConfig {
+  const styleMap: Record<PoemStyle, StyleConfig> = {
+    'sonnet': {
+      temperature: 0.7,
+      top_p: 0.85,
+      structure: "as a traditional sonnet with 14 lines of iambic pentameter (10 syllables per line), following the rhyme scheme ABAB CDCD EFEF GG"
+    },
+    'haiku': {
+      temperature: 0.6,
+      top_p: 0.8,
+      structure: "as a haiku with three lines following the 5-7-5 syllable pattern, capturing a moment in nature or emotion"
+    },
+    'villanelle': {
+      temperature: 0.8,
+      top_p: 0.9,
+      structure: "as a villanelle with 19 lines, using the specific pattern of repeating lines and ABA rhyme scheme"
+    },
+    'free-verse': {
+      temperature: 0.9,
+      top_p: 0.95,
+      structure: "in free verse style, with natural rhythm and flow, unrestricted by formal patterns"
+    }
+  };
+
+  return styleMap[style];
+}
+
+function mapEmotionalTone(tone: EmotionalTone): string {
+  const toneMap: Record<EmotionalTone, string> = {
+    'contemplative': 'expressing thoughtful introspection and philosophical depth',
+    'joyful': 'conveying uplifting celebration and bright optimism',
+    'melancholic': 'expressing gentle sadness and nostalgic reflection',
+    'romantic': 'expressing deep romantic love and passionate admiration'
+  };
+
+  return toneMap[tone];
+}
+
+function mapCreativeStyle(value: number): string {
+  if (value < 25) {
+    return 'using classical imagery and traditional poetic devices';
+  } else if (value < 50) {
+    return 'blending traditional and contemporary poetic elements';
+  } else if (value < 75) {
+    return 'favoring modern sensibilities while incorporating classical elements';
+  }
+  return 'employing innovative and contemporary poetic techniques';
+}
+
+function mapLanguageVariety(value: number): string {
+  if (value < 0.3) {
+    return 'using clear, accessible language';
+  } else if (value < 0.6) {
+    return 'using moderately sophisticated vocabulary';
+  } else if (value < 0.8) {
+    return 'using rich, varied language';
+  }
+  return 'using complex, ornate vocabulary and sophisticated expressions';
+}
+
+function mapLength(length: PoemLength): number {
+  const lengthMap: Record<PoemLength, number> = {
+    'short': 100,
+    'medium': 200,
+    'long': 300
+  };
+  return lengthMap[length];
+}
+
+// Transform Parameters
+function transformParams(frontendParams: FrontendParams): BackendParams {
+  const styleParams = mapStyle(frontendParams.style);
+  const nameMatch = frontendParams.userPrompt.match(/about\s+(?:my love lady,?\s+)?(\w+)/i);
+  const name = nameMatch ? nameMatch[1] : "";
+  
+  const enhancedPrompt = `Create a poem ${styleParams.structure}, \
+${mapEmotionalTone(frontendParams.emotionalTone)}, \
+${mapCreativeStyle(frontendParams.creativeStyle)}, \
+${mapLanguageVariety(frontendParams.languageVariety)}${name ? `, dedicated to ${name}` : ""}. \
+Theme and context: ${frontendParams.userPrompt}`;
+
+  return {
+    prompt: enhancedPrompt,
+    max_length: mapLength(frontendParams.length),
+    temperature: styleParams.temperature,
+    top_k: 30,
+    top_p: styleParams.top_p,
+    repetition_penalty: frontendParams.wordRepetition
+  };
+}
+
+// Validation Function
+async function validateWithGemini(params: PoemValidationRequest): Promise<ValidationResponse> {
   try {
-    const payload = {
-      prompt: params.userPrompt,
-      style: params.style,
-      emotional_tone: params.emotionalTone,
-      creative_style: params.creativeStyle,
-      language_variety: params.languageVariety,
-      length: params.length,
-      word_repetition: params.wordRepetition,
-    };
+    const validationPrompt = `
+    Analyze this poem and verify if it matches these requirements:
+    1. Style: ${params.originalParams.style}
+    2. Emotional tone: ${params.originalParams.emotionalTone}
+    3. Creative style level: ${params.originalParams.creativeStyle}/100
+    4. Language variety level: ${params.originalParams.languageVariety}
+    5. Requested length: ${params.originalParams.length}
+    
+    Poem to analyze:
+    ${params.poem}
+    
+    Return response in this JSON format:
+    {
+      "isValid": boolean,
+      "feedback": {
+        "styleMatch": boolean,
+        "toneMatch": boolean,
+        "lengthMatch": boolean,
+        "suggestions": "string with specific improvements if needed"
+      },
+      "reformattedPoem": "only if the original doesn't match requirements"
+    }`;
 
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      safetySettings,
+    });
+
+    const result = await model.generateContent(validationPrompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Parse the JSON response
+    const validation = JSON.parse(text) as ValidationResponse;
+    return validation;
+  } catch (error) {
+    console.error("Validation error:", error);
+    return {
+      isValid: true, // Fail open to avoid blocking poem delivery
+      feedback: {
+        styleMatch: true,
+        toneMatch: true,
+        lengthMatch: true,
+        suggestions: "Validation service unavailable"
+      }
+    };
+  }
+}
+
+// Main Generation Function
+async function generatePoem(params: FrontendParams): Promise<GenerationResponse> {
+  try {
+    const backendParams = transformParams(params);
+    
     const response = await fetch(`${process.env.SERVER_URI}/generate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(backendParams),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    jobStore.updateJob(jobId, {
-      status: "completed",
-      result: data.generate_poem,
+    const data = await response.json() as { generate_poem: string };
+    
+    // Validate the generated poem
+    const validationResult = await validateWithGemini({
+      poem: data.generate_poem,
+      originalParams: params,
+      backendParams: backendParams
     });
+
+    // Use the reformatted poem if validation failed
+    const finalPoem = validationResult.isValid ? 
+      data.generate_poem : 
+      validationResult.reformattedPoem || data.generate_poem;
+
+    return {
+      poem: finalPoem,
+      validationFeedback: validationResult.feedback
+    };
   } catch (error) {
     console.error("Error generating poem:", error);
-    jobStore.updateJob(jobId, {
-      status: "failed",
-      error: "Failed to generate poem",
-    });
+    throw new Error("Failed to generate poem. Please try again later.");
   }
 }
 
-// Handle SSE connections
-async function handleSSE(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const jobId = searchParams.get("jobId");
-
-  if (!jobId) {
-    return NextResponse.json(
-      { error: "Job ID is required" },
-      { status: 400 }
-    );
-  }
-
-  const job = jobStore.getJob(jobId);
-  if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 });
-  }
-
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    start(controller) {
-      controller.enqueue(
-        encoder.encode(`data: ${JSON.stringify(job)}\n\n`)
-      );
-
-      const listener = (updatedJob: Job) => {
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify(updatedJob)}\n\n`)
-        );
-
-        if (
-          updatedJob.status === "completed" ||
-          updatedJob.status === "failed"
-        ) {
-          controller.close();
-          eventEmitter.removeListener(`job-${jobId}`, listener);
-        }
-      };
-
-      eventEmitter.on(`job-${jobId}`, listener);
-
-      request.signal.addEventListener("abort", () => {
-        eventEmitter.removeListener(`job-${jobId}`, listener);
-      });
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
-}
-
-// Handle POST requests for new poem generation
-async function handlePOST(request: Request) {
-  const body = await request.json();
-  const {
-    userPrompt,
-    style,
-    emotionalTone,
-    creativeStyle,
-    languageVariety,
-    length,
-    wordRepetition,
-  } = body;
-
-  const newJobId = crypto.randomBytes(16).toString("hex");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const job = jobStore.createJob(newJobId);
-
-  generatePoem(newJobId, {
-    userPrompt,
-    style,
-    emotionalTone,
-    creativeStyle,
-    languageVariety,
-    length,
-    wordRepetition,
-  });
-
-  return NextResponse.json({ jobId: newJobId }, { status: 202 });
-}
-
-// Main handler that routes between GET and POST
-export async function GET(request: Request) {
-  const headersList = await headers();
-  if (headersList.get("accept") === "text/event-stream") {
-    return handleSSE(request);
-  }
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-}
-
+// API Route Handlers
 export async function POST(request: Request) {
   try {
-    const headersList = await headers();
-    if (headersList.get("accept") === "text/event-stream") {
-      return handleSSE(request);
-    }
-    return handlePOST(request);
+    const body = await request.json() as FrontendParams;
+    const result = await generatePoem(body);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("Error handling poem request:", error);
+    console.error("Error in POST handler:", error);
     return NextResponse.json(
-      { error: "Failed to process request" },
+      { error: "Failed to generate poem" },
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

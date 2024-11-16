@@ -19,7 +19,7 @@ export const usePoem = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [formState, setFormState] = useState<PoemFormState>(DEFAULT_FORM_STATE);
-  const [progress, setProgress] = useState<string>(""); // For showing generation progress
+  const [progress, setProgress] = useState<string>("");
 
   const handleGenerate = async (userPrompt?: string) => {
     try {
@@ -39,66 +39,32 @@ export const usePoem = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to initiate poem generation");
+        throw new Error("Failed to generate poem");
       }
 
-      const { jobId } = await response.json();
-      const eventSource = new EventSource(`/api/poem/generate?jobId=${jobId}`);
-
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        switch (data.status) {
-          case 'pending':
-            setProgress("Generating your poem...");
-            break;
-            
-          case 'completed':
-            eventSource.close();
-            setContent(data.result);
-            setProgress("");
-            setIsLoading(false);
-            toast.success("Poem Generated", {
-              description: "Feel free to edit and enhance the generated poem.",
-            });
-            break;
-            
-          case 'failed':
-            eventSource.close();
-            setProgress("");
-            setIsLoading(false);
-            toast.error("Generation Failed", {
-              description: data.error || "Unable to generate poem. Please try again.",
-            });
-            break;
-        }
-      };
-
-      eventSource.onerror = (error) => {
-        eventSource.close();
-        setProgress("");
-        setIsLoading(false);
-        toast.error("Generation Failed", {
-          description: "Connection lost. Please try again.",
-        });
-      };
-
-      return () => {
-        eventSource.close();
-      };
-
+      setProgress("Processing poem...");
+      const data = await response.json();
+      setContent(data.poem);
+      setProgress("");
+      
+      toast.success("Poem Generated", {
+        description: "Feel free to edit and enhance the generated poem.",
+      });
     } catch (error) {
       setProgress("");
-      setIsLoading(false);
       toast.error("Generation Failed", {
-        description: "Unable to start poem generation. Please try again.",
+        description: "Unable to generate poem. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleGenerateFast = async (userPrompt?: string) => {
     try {
       setIsLoading(true);
+      setProgress("Generating your poem..."); // Progress for fast generation
+
       const response = await fetch("/api/poem/generate-fast", {
         method: "POST",
         headers: {
@@ -116,10 +82,13 @@ export const usePoem = () => {
 
       const data = await response.json();
       setContent(data.poem);
+      setProgress("");
+      
       toast.success("Poem Generated", {
         description: "Feel free to edit and enhance the generated poem.",
       });
     } catch (error) {
+      setProgress("");
       toast.error("Generation Failed", {
         description: "Unable to generate poem. Please try again.",
       });
@@ -131,10 +100,12 @@ export const usePoem = () => {
   const handleReset = () => {
     setContent("");
     setFormState(DEFAULT_FORM_STATE);
+    setProgress("");
   };
 
   const handleSave = async () => {
     try {
+      setProgress("Saving poem...");
       const response = await fetch("/api/poem/save", {
         method: "POST",
         headers: {
@@ -151,10 +122,12 @@ export const usePoem = () => {
       }
 
       setSaveDialogOpen(true);
+      setProgress("");
       toast.success("Poem Saved", {
         description: "Your poem has been saved successfully.",
       });
     } catch (error) {
+      setProgress("");
       toast.error("Save Failed", {
         description: "Unable to save poem. Please try again.",
       });
@@ -163,6 +136,7 @@ export const usePoem = () => {
 
   const handleShare = async () => {
     try {
+      setProgress("Generating share link...");
       const response = await fetch("/api/poem/share", {
         method: "POST",
         headers: {
@@ -181,11 +155,13 @@ export const usePoem = () => {
       const data = await response.json();
       setShareUrl(data.shareUrl);
       setShareDialogOpen(true);
+      setProgress("");
 
       toast.success("Share Link Generated", {
         description: "Open the dialog to copy your share link.",
       });
     } catch (error) {
+      setProgress("");
       toast.error("Share Failed", {
         description: "Unable to generate share link. Please try again.",
       });
@@ -194,11 +170,15 @@ export const usePoem = () => {
 
   const handleCopyShareUrl = async () => {
     try {
+      setProgress("Copying to clipboard...");
       await navigator.clipboard.writeText(shareUrl);
+      setProgress("");
+      
       toast.success("Copied to Clipboard", {
         description: "Share link has been copied successfully.",
       });
     } catch (error) {
+      setProgress("");
       toast.error("Copy Failed", {
         description: "Unable to copy link. Please try again.",
       });

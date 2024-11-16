@@ -1,0 +1,21 @@
+{
+    "architectures": [
+      "GPT2LMHeadModel"
+    ],
+    "model_type": "gpt2",
+    "activation_function": "gelu_new",
+    "attn_pdrop": 0.1,
+    "bos_token_id": 50256,
+    "embd_pdrop": 0.1,
+    "eos_token_id": 50256,
+    "initializer_range": 0.02,
+    "layer_norm_epsilon": 1e-5,
+    "n_ctx": 1024,
+    "n_embd": 768,
+    "n_head": 12,
+    "n_layer": 12,
+    "n_positions": 1024,
+    "resid_pdrop": 0.1,
+    "vocab_size": 50257,
+    "use_cache": true
+  }

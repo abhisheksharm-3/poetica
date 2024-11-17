@@ -44,7 +44,7 @@ export const usePoem = () => {
 
       setProgress("Processing poem...");
       const data = await response.json();
-      setContent(data.poem);
+      setContent(data.poem.content);
       setProgress("");
       
       toast.success("Poem Generated", {

@@ -23,6 +23,7 @@ const safetySettings = [
     },
 ];
 
+// Frontend parameter types
 type PoemStyle = "sonnet" | "haiku" | "free-verse" | "villanelle";
 type EmotionalTone = "contemplative" | "joyful" | "melancholic" | "romantic";
 type PoemLength = "short" | "medium" | "long";
@@ -37,6 +38,7 @@ interface FrontendParams {
   wordRepetition: number;  // 1-2 slider
 }
 
+// Backend parameter types
 interface BackendParams {
   prompt: string;
   max_length: number;
@@ -46,6 +48,29 @@ interface BackendParams {
   repetition_penalty: number;
 }
 
+// API Response interface
+interface PoemApiResponse {
+  poem: {
+    title: string;
+    lines: string[];
+    style: string;
+  };
+  original_prompt: string;
+  parameters: {
+    max_length: number;
+    temperature: number;
+    top_k: number;
+    top_p: number;
+    repetition_penalty: number;
+  };
+  metadata: {
+    device: string;
+    model_type: string;
+    timestamp: string;
+  };
+}
+
+// Validation interfaces
 interface ValidationFeedback {
   styleMatch: boolean;
   toneMatch: boolean;
@@ -65,11 +90,21 @@ interface PoemValidationRequest {
   backendParams: BackendParams;
 }
 
+// Generation response interface
 interface GenerationResponse {
-  poem: string;
+  poem: {
+    title: string;
+    content: string;
+    lines: string[];
+  };
   validationFeedback?: ValidationFeedback;
+  metadata?: {
+    timestamp: string;
+    model_type: string;
+  };
 }
 
+// Style configuration interface
 interface StyleConfig {
   temperature: number;
   top_p: number;
@@ -168,6 +203,21 @@ Theme and context: ${frontendParams.userPrompt}`;
   };
 }
 
+// Helper function to extract keywords from original poem lines
+function extractKeywords(lines: string[]): string {
+  const fullText = lines.join(' ');
+  
+  const stopWords = new Set(['the', 'and', 'a', 'in', 'of', 'to', 'with', 'on', 'at', 'for', 'by']);
+  const words = fullText
+    .toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+    .split(/\s+/)
+    .filter(word => word.length > 3 && !stopWords.has(word));
+  
+  const uniqueWords = Array.from(new Set(words));
+  return uniqueWords.slice(0, 10).join(', ');
+}
+
 // Validation Function
 async function validateWithGemini(params: PoemValidationRequest): Promise<ValidationResponse> {
   try {
@@ -182,7 +232,7 @@ async function validateWithGemini(params: PoemValidationRequest): Promise<Valida
     Poem to analyze:
     ${params.poem}
     
-    Return response in this JSON format:
+    Respond with a JSON object (without any markdown formatting or code blocks) that follows this structure:
     {
       "isValid": boolean,
       "feedback": {
@@ -191,7 +241,7 @@ async function validateWithGemini(params: PoemValidationRequest): Promise<Valida
         "lengthMatch": boolean,
         "suggestions": "string with specific improvements if needed"
       },
-      "reformattedPoem": "only if the original doesn't match requirements"
+      "reformattedPoem": "only if the original doesn't match requirements or is not coherent"
     }`;
 
     const model = genAI.getGenerativeModel({ 
@@ -203,13 +253,26 @@ async function validateWithGemini(params: PoemValidationRequest): Promise<Valida
     const response = await result.response;
     const text = response.text();
     
-    // Parse the JSON response
-    const validation = JSON.parse(text) as ValidationResponse;
-    return validation;
+    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+    
+    try {
+      return JSON.parse(cleanText) as ValidationResponse;
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      return {
+        isValid: true,
+        feedback: {
+          styleMatch: true,
+          toneMatch: true,
+          lengthMatch: true,
+          suggestions: "Validation response parsing failed"
+        }
+      };
+    }
   } catch (error) {
     console.error("Validation error:", error);
     return {
-      isValid: true, // Fail open to avoid blocking poem delivery
+      isValid: true,
       feedback: {
         styleMatch: true,
         toneMatch: true,
@@ -225,7 +288,8 @@ async function generatePoem(params: FrontendParams): Promise<GenerationResponse>
   try {
     const backendParams = transformParams(params);
     
-    const response = await fetch(`${process.env.SERVER_URI}/generate`, {
+    // First, get inspiration/keywords from backend API
+    const backendResponse = await fetch(`${process.env.SERVER_URI}/generate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -233,27 +297,79 @@ async function generatePoem(params: FrontendParams): Promise<GenerationResponse>
       body: JSON.stringify(backendParams),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (!backendResponse.ok) {
+      throw new Error(`Backend API error! status: ${backendResponse.status}`);
     }
 
-    const data = await response.json() as { generate_poem: string };
+    const apiResponse = await backendResponse.json() as PoemApiResponse;
+    
+    // Extract keywords and themes from backend response
+    const originalLines = apiResponse.poem.lines;
+    const keywords = extractKeywords(originalLines);
+    
+    // Create enhanced generation prompt for Gemini
+    const generationPrompt = `
+    Generate a polished and coherent poem using these elements as inspiration:
+    
+    Original Theme: ${params.userPrompt}
+    Keywords and Phrases from Initial Generation: ${keywords}
+    
+    Style Requirements:
+    1. Style and Structure: ${mapStyle(params.style).structure}
+    2. Emotional Tone: ${mapEmotionalTone(params.emotionalTone)}
+    3. Creative Approach: ${mapCreativeStyle(params.creativeStyle)}
+    4. Language Level: ${mapLanguageVariety(params.languageVariety)}
+    
+    Try to incorporate the essence and key themes from the original generation while ensuring
+    the poem is coherent and follows the required structure.
+    
+    Please format the response as a JSON object (without code blocks) following this structure:
+    {
+      "title": "The poem's title",
+      "poem": "The complete poem with proper line breaks"
+    }`;
+
+    // Generate with Gemini
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-pro',
+      safetySettings,
+    });
+
+    const result = await model.generateContent(generationPrompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Parse Gemini's response
+    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+    const generatedContent = JSON.parse(cleanText);
+    
+    // Format poem for validation
+    const formattedPoem = generatedContent.poem;
     
     // Validate the generated poem
     const validationResult = await validateWithGemini({
-      poem: data.generate_poem,
+      poem: formattedPoem,
       originalParams: params,
       backendParams: backendParams
     });
 
     // Use the reformatted poem if validation failed
     const finalPoem = validationResult.isValid ? 
-      data.generate_poem : 
-      validationResult.reformattedPoem || data.generate_poem;
+      formattedPoem : 
+      validationResult.reformattedPoem || formattedPoem;
 
+    // Prepare final response
     return {
-      poem: finalPoem,
-      validationFeedback: validationResult.feedback
+      poem: {
+        title: generatedContent.title,
+        content: finalPoem,
+        lines: finalPoem.split('\n')
+      },
+      validationFeedback: validationResult.feedback,
+      metadata: {
+        timestamp: apiResponse.metadata.timestamp,
+        model_type: `${apiResponse.metadata.model_type} + gemini-1.5-pro`
+      }
     };
   } catch (error) {
     console.error("Error generating poem:", error);
@@ -265,12 +381,22 @@ async function generatePoem(params: FrontendParams): Promise<GenerationResponse>
 export async function POST(request: Request) {
   try {
     const body = await request.json() as FrontendParams;
+    
+    // Input validation
+    if (!body.userPrompt || !body.style || !body.emotionalTone || !body.length) {
+      return NextResponse.json(
+        { error: "Missing required parameters" },
+        { status: 400 }
+      );
+    }
+
     const result = await generatePoem(body);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error in POST handler:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to generate poem";
     return NextResponse.json(
-      { error: "Failed to generate poem" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

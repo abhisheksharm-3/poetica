@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 

@@ -62,7 +62,7 @@ const AboutPage: React.FC = () => {
     ],
     ai: [
       { name: "Gemini API", description: "Google's advanced language model" },
-      { name: "Llama-2 7B Chat", description: "Quantized local language model (Experimental)" }
+      { name: "PoeticaGPT", description: "Quantized local language model based on GPT2 Architecture (Experimental)" }
     ]
   };
 

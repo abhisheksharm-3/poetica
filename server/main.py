@@ -23,8 +23,8 @@ BATCH_SIZE = 4
 CACHE_SIZE = 1024
 
 MODEL_CONFIG = GPT2Config(
-    n_positions=128,
-    n_ctx=128,
+    n_positions=400,
+    n_ctx=400,
     n_embd=384,
     n_layer=6,
     n_head=6,

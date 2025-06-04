@@ -3,9 +3,6 @@ import Link from "next/link";
 import {
   HomeIcon,
   PenToolIcon,
-  BookOpenIcon,
-  HeartIcon,
-  GraduationCapIcon,
   Info,
 } from "lucide-react";
 
@@ -38,9 +35,9 @@ const DATA = {
   navbar: [
     { href: "/", icon: HomeIcon, label: "Home" },
     { href: "/create", icon: PenToolIcon, label: "Create" },
-    { href: "/explore", icon: BookOpenIcon, label: "Explore" },
-    { href: "/learn", icon: GraduationCapIcon, label: "Learn" },
-    { href: "/favorites", icon: HeartIcon, label: "Favorites" },
+    // { href: "/explore", icon: BookOpenIcon, label: "Explore" },
+    // { href: "/learn", icon: GraduationCapIcon, label: "Learn" },
+    // { href: "/favorites", icon: HeartIcon, label: "Favorites" },
     { href: "/about", icon: Info, label: "About" },
   ],
   social: {

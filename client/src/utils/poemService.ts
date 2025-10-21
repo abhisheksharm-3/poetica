@@ -89,7 +89,7 @@ export async function generatePoem(
     
     // Generate refined poem with Gemini
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash-lite',
       safetySettings: [
         {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -138,7 +138,7 @@ export async function generatePoem(
       validationFeedback: validationResult.feedback,
       metadata: {
         timestamp: new Date().toISOString(),
-        model_type: `${apiResponse.metadata.model_type} + gemini-2.0-flash`
+        model_type: `${apiResponse.metadata.model_type} + gemini-2.5-flash-lite`
       }
     };
   } catch (error) {

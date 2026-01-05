@@ -2,8 +2,8 @@
 fastapi==0.109.2
 uvicorn==0.27.1
 pydantic==2.6.1
-huggingface_hub
-bitsandbytes
+pydantic-settings==2.1.0
+
 # For API requests and handling
 requests==2.31.0
 python-multipart==0.0.9
@@ -11,12 +11,12 @@ python-multipart==0.0.9
 # For model handling
 torch==2.3.1
 transformers==4.43.1
-vllm==0.5.3.post1
 accelerate==0.27.2
+huggingface_hub
 
-# Optional but recommended for performance
-python-jose==3.3.0  # for JWT handling if you add auth later
-gunicorn==21.2.0    # for production deployment
-python-dotenv==1.0.0  # for environment variables
-ctransformers
-pyllamacpp==2.4.0
+# Rate limiting
+slowapi==0.1.9
+
+# Production deployment
+gunicorn==21.2.0
+python-dotenv==1.0.0

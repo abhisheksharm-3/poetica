@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Poetica - Frontend
 
-## Getting Started
+Modern, animated poetry generation interface built with Next.js 16 and React 19.
 
-First, run the development server:
+## 🚀 Quick Start
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📜 Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework**: [Next.js 16](https://nextjs.org) with App Router
+- **React**: Version 19 with Server Components
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) + CSS Modules
+- **UI Components**: [shadcn UI](https://ui.shadcn.com/)
+- **Animations**: [Framer Motion](https://framer.com/motion)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) + [TanStack Query](https://tanstack.com/query)
+- **Icons**: [Lucide React](https://lucide.dev) + [Remix Icons](https://remixicon.com)
+- **PDF Export**: [@react-pdf/renderer](https://react-pdf.org), jspdf, html2canvas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/                    # App Router pages
+│   ├── about/             # About page
+│   ├── create/            # Poem creation page
+│   ├── favorites/         # Saved poems
+│   ├── learn/             # Poetry guides
+│   ├── my-poems/          # User's poems
+│   └── api/               # API routes
+│
+├── components/            # React components
+│   ├── ui/               # Base UI components (shadcn)
+│   ├── landing/          # Landing page sections
+│   └── ...               # Feature components
+│
+├── hooks/                 # Custom React hooks
+├── store/                 # Zustand state management
+├── providers/             # Context providers
+├── config/                # App configuration
+├── constants/             # App constants
+└── utils/                 # Helper functions
+```
 
-## Deploy on Vercel
+## ⚙️ Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Create a `.env.local` file:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_key
+```
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API key for title generation |
+
+## 🎨 Key Features
+
+- **Poem Creation**: Interactive form with style, tone, and complexity controls
+- **AI Title Generation**: Auto-generate titles using Google Gemini
+- **PDF Export**: Download poems as styled PDF documents
+- **Favorites**: Local storage-based favorites system
+- **Learning Section**: Poetry tutorials and guides
+- **Responsive Design**: Mobile-first, fully responsive UI
+- **Dark Theme**: Beautiful dark-themed interface with animations
+
+## 🚢 Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Configure environment variables
+4. Deploy
+
+Configuration is handled via `vercel.json`.
+
+## 📚 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [Radix UI Docs](https://radix-ui.com/docs)
+- [Framer Motion Docs](https://www.framer.com/motion/)

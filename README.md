@@ -5,147 +5,152 @@
 </p>
 
 <p align="center">
-  Poetica is an AI-powered poetry generation platform that lets you create personalized and unique poems. Blending a sleek user interface with a fine-tuned GPT-2 model, it crafts poetry in a variety of styles, tones, and complexities.
+  <strong>AI-Powered Poetry Generation Platform</strong><br>
+  Create personalized, unique poems using a fine-tuned GPT-2 model with customizable styles, tones, and creative parameters.
+</p>
+
+<p align="center">
+  <a href="https://poetica-ai.vercel.app/">Live Demo</a> •
+  <a href="#features">Features</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#tech-stack">Tech Stack</a>
 </p>
 
 ---
 
-## 🚀 **Live Demo**
-Check out Poetica in action: [**Poetica AI**](https://poetica-ai.vercel.app/)
+## 🎯 Overview
+
+Poetica combines a modern Next.js frontend with a FastAPI backend powered by a fine-tuned GPT-2 model to generate poetry. Users can customize poem parameters including style, tone, complexity, and length to create unique poetic compositions.
 
 ---
 
-## 🧐 **Features**
-Poetica offers a blend of creativity and control with these standout features:
+## ✨ Features
 
-### 🌟 **Custom Poem Generation**  
-- Choose from poetic styles like *Sonnet*, *Haiku*, or free verse.  
-- Customize tone (*Thoughtful*, *Joyful*, etc.).  
-- Adjust creative style from *Classic* to *Modern* using a slider.  
-- Fine-tune language richness from *Simple* to *Rich*.  
-- Set poem length and control word repetition.
+### Poem Generation
+- **Poetic Styles**: Sonnet, Haiku, Free Verse
+- **Tone Control**: Thoughtful, Joyful, Melancholic, and more
+- **Creative Sliders**: Adjust from Classic to Modern style
+- **Language Richness**: Simple to Rich vocabulary control
+- **Length & Repetition**: Fine-tune output length and word variety
 
-### 💻 **Interactive User Interface**  
-- Built with **Next.js** for a responsive and intuitive experience.  
-- Real-time customization options for poetry parameters.
-
-### 🤖 **AI-Driven Creativity**  
-- Powered by a custom fine-tuned **GPT-2 model**, optimized for poetic expression.
+### Additional Features
+- **AI Title Generation**: Auto-generate poem titles using Google Gemini
+- **Export Options**: Download poems as PDF
+- **Favorites System**: Save and manage favorite poems
+- **Learning Resources**: Poetry guides and tutorials
 
 ---
 
-## 🏗️ **Project Structure**
+## 🛠️ Tech Stack
 
-### Frontend (`client` Directory)
-```plaintext
-client/
-├── .next/               # Next.js build files
-├── public/              # Static assets
-├── src/                 # Source code for the React app
-├── .env                 # Environment variables
-├── next.config.ts       # Next.js configuration
-├── tailwind.config.ts   # Tailwind CSS configuration
-├── package.json         # Frontend package dependencies
-├── vercel.json          # Vercel configuration
+| Component | Technology |
+|-----------|------------|
+| **Frontend** | Next.js 16, React 19, TypeScript |
+| **UI Components** | Radix UI, shadcn/ui, Tailwind CSS |
+| **State Management** | Zustand, TanStack Query |
+| **Animations** | Framer Motion |
+| **Backend** | FastAPI, Python 3.10+ |
+| **AI Model** | Fine-tuned GPT-2, PyTorch, Transformers |
+| **Deployment** | Vercel (Frontend), Hugging Face Spaces (Backend) |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js v20+
+- Python 3.10+
+- pip or pipenv
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/abhisheksharm-3/poetica.git
+cd poetica
+
+# Frontend setup
+cd client
+npm install
+
+# Backend setup
+cd ../server
+pip install -r requirements.txt
 ```
 
-### Backend (`server` Directory)
-```plaintext
-server/
-├── app/
-│   ├── api/             # FastAPI endpoints
-│   ├── core/            # Core utilities and middleware
-│   ├── services/        # Logic and helper functions
-│   ├── utils/           # Utility scripts
-├── models/              # Pre-trained GPT-2 model
-├── logs/                # Logging outputs
-├── main.py              # FastAPI entry point
-├── download_model.py    # Script to download GPT-2 model
-├── Dockerfile           # Docker setup for backend deployment
-├── requirements.txt     # Python dependencies
+Create a `.env.local` file in frontend:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_key
+```
+
+### Running Locally
+
+```bash
+# Terminal 1: Start backend
+cd server
+uvicorn main:app --reload --port 8000
+
+# Terminal 2: Start frontend
+cd client
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 📁 Project Structure
+
+```
+poetica/
+├── client/                 # Next.js frontend
+│   ├── src/
+│   │   ├── app/           # App router pages
+│   │   ├── components/    # UI components
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── store/         # Zustand state
+│   │   └── utils/         # Helper functions
+│   └── public/            # Static assets
+│
+└── server/                 # FastAPI backend
+    ├── src/
+    │   ├── api/           # Route handlers
+    │   ├── services/      # Business logic
+    │   ├── models/        # Pydantic schemas
+    │   └── middleware/    # Rate limiting
+    ├── models/            # GPT-2 model files
+    └── main.py            # Entry point
 ```
 
 ---
 
-## 🛠️ **Installation Steps**
+## 🚢 Deployment
 
-### **Prerequisites**
-- **Node.js** (v20+ recommended)  
-- **Python** (v3.10+)  
-- **pipenv** or **virtualenv** for Python dependency management  
-
-### **Installation**
-
-1. **Clone the Repository**  
-   ```bash
-   git clone https://github.com/abhisheksharm-3/poetica.git
-   cd poetica
-   ```
-
-2. **Install Frontend Dependencies**  
-   ```bash
-   cd client
-   npm install
-   ```
-
-3. **Set Up Backend**  
-   ```bash
-   cd ../server
-   pip install -r requirements.txt
-   ```
-
-4. **Run the Application**  
-   - Start the backend (FastAPI):  
-     ```bash
-     uvicorn main:app --reload
-     ```
-   - Start the frontend (Next.js):  
-     ```bash
-     cd ../client
-     npm run dev
-     ```
-
-5. **Access the app**  
-   Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
+| Service | Platform | Config |
+|---------|----------|--------|
+| Frontend | [Vercel](https://vercel.com) | `vercel.json` |
+| Backend | [Hugging Face Spaces](https://huggingface.co/spaces) | `Dockerfile` |
 
 ---
 
-## 🚢 **Deployment**
+## 🧠 Model Fine-Tuning
 
-### Frontend
-- **Platform**: [Vercel](https://vercel.com)  
-- Easily deployable using the `vercel.json` configuration file.
-
-### Backend
-- **Platform**: [Hugging Face Spaces](https://huggingface.co/spaces)  
-- Deployed as a Docker application using the provided `Dockerfile`.
-
----
-
-## 🧠 **Fine-Tuning GPT-2**
-
-The GPT-2 model used in this project has been fine-tuned for poetic generation. You can find the fine-tuning details on Kaggle:  
+The GPT-2 model was fine-tuned for poetry generation. See the training notebook:  
 [**Fine-Tuning GPT-2 for Poetry on Kaggle**](https://www.kaggle.com/code/abhisheksan1/notebookc1613fb160)
 
 ---
 
-## 💡 **Usage**
-1. Open the application at [poetica-ai.vercel.app](https://poetica-ai.vercel.app).  
-2. Customize poem parameters such as style, tone, and length.  
-3. Generate your poem and enjoy! 🎉  
+## 📚 Documentation
+
+- [Client README](./client/README.md) - Frontend setup and architecture
+- [Server README](./server/README.md) - API documentation and deployment
 
 ---
 
-## 🧰 **Technologies Used**
+## ❤️ Author
 
-- **Frontend**: [Next.js](https://nextjs.org)  
-- **Backend**: [FastAPI](https://fastapi.tiangolo.com)  
-- **AI Model**: [GPT-2](https://openai.com) (fine-tuned for poetry)  
-- **Deployment**:  
-  - Frontend: [Vercel](https://vercel.com)  
-  - Backend: [Hugging Face Spaces](https://huggingface.co/spaces)
+Built by [Abhishek Sharma](https://abhisheksharma.tech)
 
----
-
-## ❤️ **Like My Work?**
-Explore more of my projects at [**abhisheksharma.tech/projects**](https://abhisheksharma.tech/projects)
+Explore more projects at [abhisheksan.com/projects](https://abhisheksan.com/projects)

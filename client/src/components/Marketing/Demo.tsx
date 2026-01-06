@@ -1,8 +1,6 @@
+"use client"
+
 import { motion } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Bolt } from 'lucide-react'
 
 const DemoSection = () => {
   const fadeUpVariant = {
@@ -13,101 +11,87 @@ const DemoSection = () => {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: [0.215, 0.61, 0.355, 1]
+        ease: [0.215, 0.61, 0.355, 1] as const
       }
     })
   }
 
-  const metrics = [
-    { label: 'Joy', value: 70 },
-    { label: 'Serenity', value: 85 },
-    { label: 'Wonder', value: 60 }
-  ]
-
   return (
-    <section id="demo" className="min-h-screen flex items-center justify-center py-20">
+    <section id="demo" className="py-24 bg-background">
       <div className="container mx-auto px-4 max-w-4xl">
-        <motion.div
-          custom={0}
-          initial="hidden"
-          animate="visible"
-          variants={fadeUpVariant}
-          className="space-y-2 text-center mb-16"
-        >
-          <h2 className="text-4xl font-serif tracking-tight">Experience AI Poetry</h2>
-          <p className="text-muted-foreground">Watch as algorithms transform into art</p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-12">
+          {/* Sample Output - Right Aligned (alternating from HowItWorks' left) */}
           <motion.div
-            custom={1}
+            custom={0}
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true }}
             variants={fadeUpVariant}
+            className="space-y-8 border-r-4 border-primary/20 pr-8 text-right"
           >
-            <Card className="backdrop-blur-sm">
-              <CardContent className="pt-6">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    <p className="text-sm font-medium text-muted-foreground">Generated Output</p>
-                  </div>
-                  <p className="text-lg font-serif leading-relaxed">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-full float-right">
+              <p className="text-xs font-medium uppercase tracking-wider text-primary">
+                Example
+              </p>
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            </div>
+
+            <div className="clear-both" />
+
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h2 className="text-3xl md:text-4xl font-serif tracking-tight">
+                  exemplum
+                </h2>
+                <p className="text-lg text-muted-foreground font-mono tracking-wide">
+                  /ɪɡˈzempləm/
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  a sample output demonstrating capability <span className="italic font-serif text-foreground">.n</span>
+                </p>
+              </div>
+
+              {/* The Poem */}
+              <motion.div
+                custom={1}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUpVariant}
+                className="space-y-4 pt-4"
+              >
+                <div className="flex items-center gap-3 flex-wrap justify-end">
+                  <span className="text-sm text-muted-foreground">
+                    generated in <span className="font-mono">1.2s</span> • contemplative
+                  </span>
+                  <span className="text-muted-foreground/40">•</span>
+                  <span className="px-3 py-1 bg-muted rounded-full text-sm font-medium text-muted-foreground">
+                    Free Verse
+                  </span>
+                </div>
+
+                <div className="space-y-3 py-4">
+                  <p className="text-xl font-serif leading-relaxed italic">
                     In twilight&apos;s embrace, whispers unfold,
-                    <br />
+                  </p>
+                  <p className="text-xl font-serif leading-relaxed italic">
                     Echoes of dreams, stories untold.
-                    <br />
+                  </p>
+                  <p className="text-xl font-serif leading-relaxed italic">
                     Moonlit shadows dance and sway,
-                    <br />
+                  </p>
+                  <p className="text-xl font-serif leading-relaxed italic">
                     As night&apos;s symphony begins to play.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          <motion.div
-            custom={2}
-            initial="hidden"
-            animate="visible"
-            variants={fadeUpVariant}
-          >
-            <Card className="backdrop-blur-sm">
-              <CardContent className="pt-6">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    <p className="text-sm font-medium text-muted-foreground">Emotional Analysis</p>
-                  </div>
-                  <div className="space-y-4">
-                    {metrics.map((metric) => (
-                      <div key={metric.label} className="space-y-2">
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>{metric.label}</span>
-                          <span>{metric.value}%</span>
-                        </div>
-                        <Progress value={metric.value} className="h-1.5" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                <p className="text-sm text-muted-foreground italic">
+                  AI-generated, ready for editing and personalization —
+                </p>
+              </motion.div>
+            </div>
           </motion.div>
         </div>
-
-        <motion.div
-          custom={3}
-          initial="hidden"
-          animate="visible"
-          variants={fadeUpVariant}
-          className="mt-12 flex justify-center"
-        >
-          <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm">
-            <Bolt className="w-4 h-4" />
-            Generated in 1.2 seconds
-          </Badge>
-        </motion.div>
       </div>
     </section>
   )

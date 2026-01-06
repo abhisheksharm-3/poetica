@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { ValidationResponse, PoemValidationRequest } from './types';
-import { STYLE_CONFIGS, EMOTIONAL_TONE_CONFIGS } from './styleConfig';
+import { STYLE_CONFIGS, EMOTIONAL_TONE_CONFIGS } from './style-config';
 
 const safetySettings = [
   {
@@ -56,7 +56,7 @@ Provide a detailed technical analysis in JSON format:
   "reformattedPoem": string // Only if the original needs significant improvement
 }`;
 
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash-lite',
       safetySettings,
     });
@@ -64,7 +64,7 @@ Provide a detailed technical analysis in JSON format:
     const result = await model.generateContent(validationPrompt);
     const response = await result.response;
     const text = response.text();
-    
+
     return JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
   } catch (error) {
     console.error("Validation error:", error);

@@ -1,38 +1,20 @@
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
+import { GEMINI_MODEL, GEMINI_SAFETY_SETTINGS } from '@/config/gemini-config';
 
-// Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const safetySettings = [
-    {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-];
 
 export async function POST(request: NextRequest) {
     try {
         // Get parameters from request body
-        const { 
+        const {
             userPrompt,
             style,
             emotionalTone,
             creativeStyle,
             languageVariety,
             length,
-            wordRepetition 
+            wordRepetition
         } = await request.json();
 
         // Create base prompt based on whether user_prompt exists
@@ -62,9 +44,9 @@ export async function POST(request: NextRequest) {
         Return only the poem without additional text or explanations. Avoid content that could trigger safety filters.`;
 
         // Initialize Gemini model
-        const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash-lite',
-            safetySettings,
+        const model = genAI.getGenerativeModel({
+            model: GEMINI_MODEL,
+            safetySettings: GEMINI_SAFETY_SETTINGS,
         });
 
         // Generate poem

@@ -1,23 +1,22 @@
-import React from 'react'
+"use client"
+
 import { motion } from 'framer-motion'
-import { Wand2, PenTool, BookOpen } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 const HowItWorks = () => {
   const steps = [
     {
-      title: "Choose Mood & Theme",
-      description: "Select the emotional tone and creative direction for your poem.",
-      icon: Wand2
+      label: "Configure",
+      description: "Select emotional tone, poetic style, and creative parameters. The AI adapts to your artistic vision."
     },
     {
-      title: "Select Poetry Style",
-      description: "Pick from classic forms like sonnet, haiku, or free verse.",
-      icon: PenTool
+      label: "Generate",
+      description: "Watch as the algorithm transforms your parameters into original verse, crafted in seconds."
     },
     {
-      title: "Generate & Analyze",
-      description: "Receive a unique AI-crafted poem with deep literary insights.",
-      icon: BookOpen
+      label: "Refine",
+      description: "Edit, regenerate, or save. Each poem becomes part of your personal collection."
     }
   ]
 
@@ -29,73 +28,85 @@ const HowItWorks = () => {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: [0.215, 0.61, 0.355, 1]
+        ease: [0.215, 0.61, 0.355, 1] as const
       }
     })
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center py-20">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
-          custom={0}
-          initial="hidden"
-          animate="visible"
-          variants={fadeUpVariant}
-          className="space-y-2 text-center mb-16"
-        >
-          <h2 className="text-3xl md:text-4xl font-serif tracking-tight">
-            How Poetica Works
-          </h2>
-          <p className="text-base text-muted-foreground">
-            Create meaningful poetry in three simple steps
-          </p>
-        </motion.div>
+    <section id="how-it-works" className="py-24 bg-background">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="space-y-12">
+          {/* Section Content - Left Aligned (alternating from Features' right) */}
+          <motion.div
+            custom={0}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUpVariant}
+            className="space-y-8 border-l-4 border-primary/20 pl-8"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-full">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <p className="text-xs font-medium uppercase tracking-wider text-primary">
+                Process
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {steps.map((step, index) => (
-            <motion.div
-              key={index}
-              custom={index + 1}
-              initial="hidden"
-              animate="visible"
-              variants={fadeUpVariant}
-              className="relative"
-            >
-              <div className="space-y-6">
-                <div className="relative">
-                  {/* Connection lines */}
-                  {index < steps.length - 1 && (
-                    <div className="hidden md:block absolute top-1/2 left-[3rem] right-0 h-[2px] bg-gradient-to-r from-blue-200 to-transparent -translate-y-1/2" />
-                  )}
-                  
-                  {/* Icon container */}
-                  <div className="relative z-10 inline-flex">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-blue-100 rounded-full blur-xl opacity-50" />
-                      <div className="relative h-12 w-12 flex items-center justify-center rounded-full border border-blue-200 bg-white">
-                        <step.icon className="h-5 w-5 text-blue-600" strokeWidth={1.5} />
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h2 className="text-3xl md:text-4xl font-serif tracking-tight">
+                  modus operandi
+                </h2>
+                <p className="text-lg text-muted-foreground font-mono tracking-wide">
+                  /ˌməʊdəs ˌɒpəˈrændi/
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="italic font-serif text-foreground">n.</span> the method of working; the way something operates
+                </p>
+              </div>
+
+              <div className="space-y-5 pt-4">
+                {steps.map((step, index) => (
+                  <motion.div
+                    key={index}
+                    custom={index + 1}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    variants={fadeUpVariant}
+                    className="group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm font-mono text-primary mt-1">{index + 1}.</span>
+                      <div className="space-y-1">
+                        <span className="text-lg font-medium">{step.label}</span>
+                        <p className="text-base text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors">
+                          {step.description}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-mono text-muted-foreground">
-                      0{index + 1}
-                    </span>
-                    <h3 className="text-lg font-medium">
-                      {step.title}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
+                  </motion.div>
+                ))}
               </div>
-            </motion.div>
-          ))}
+            </div>
+          </motion.div>
+
+          {/* Action Buttons */}
+          <motion.div
+            custom={4}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUpVariant}
+            className="flex flex-col sm:flex-row items-start gap-4 pl-8"
+          >
+            <Button size="lg" className="text-base h-12 px-8 shadow-lg hover:shadow-xl transition-shadow" asChild>
+              <Link href="/create">
+                Begin Creating
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </div>
     </section>

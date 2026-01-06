@@ -15,7 +15,7 @@ import {
   Eye,
   Sparkles
 } from 'lucide-react';
-import Layout from '@/components/Layout/Layout';
+import Layout from '@/components/layout/Layout';
 
 const LearnPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,7 +28,7 @@ const LearnPage = () => {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: [0.215, 0.61, 0.355, 1]
+        ease: [0.215, 0.61, 0.355, 1] as const
       }
     })
   };
@@ -162,11 +162,11 @@ const LearnPage = () => {
                                 <BookMarked className="h-4 w-4" />
                               </Button>
                             </div>
-                            
+
                             <p className="text-muted-foreground">
                               {resource.description}
                             </p>
-                            
+
                             <div className="flex flex-wrap gap-2">
                               {resource.topics.map(topic => (
                                 <Badge key={topic} variant="outline">
@@ -174,7 +174,7 @@ const LearnPage = () => {
                                 </Badge>
                               ))}
                             </div>
-                            
+
                             <div className="border-t pt-4 mt-4">
                               <h4 className="text-sm font-medium mb-2">Includes:</h4>
                               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -186,7 +186,7 @@ const LearnPage = () => {
                                 ))}
                               </ul>
                             </div>
-                            
+
                             <div className="flex justify-end pt-2">
                               <Button>
                                 <Eye className="mr-2 h-4 w-4" />

@@ -1,10 +1,10 @@
 import { FrontendParams } from './types';
-import { STYLE_CONFIGS, EMOTIONAL_TONE_CONFIGS } from './styleConfig';
+import { STYLE_CONFIGS, EMOTIONAL_TONE_CONFIGS } from './style-config';
 
 export function createEnhancedPrompt(params: FrontendParams, keywords: string): string {
   const styleConfig = STYLE_CONFIGS[params.style];
   const toneConfig = EMOTIONAL_TONE_CONFIGS[params.emotionalTone];
-  
+
   return `
 As a master poet well-versed in various poetic traditions, create an original, emotionally resonant poem:
 

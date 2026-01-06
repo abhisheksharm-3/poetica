@@ -22,9 +22,8 @@ import {
   Share2,
   Clock,
   Filter,
-  BookmarkPlus,
 } from 'lucide-react';
-import Layout from '@/components/Layout/Layout';
+import Layout from '@/components/layout/Layout';
 
 interface Poem {
   id: number;
@@ -46,7 +45,7 @@ const fadeUpVariant: Variants = {
     transition: {
       delay: i * 0.1,
       duration: 0.5,
-      ease: [0.215, 0.61, 0.355, 1]
+      ease: [0.215, 0.61, 0.355, 1] as const
     }
   })
 };
@@ -77,7 +76,7 @@ const PoemDialog: React.FC<{ poems: Poem[], onClose: () => void }> = ({ poems, o
           <p className="font-serif text-muted-foreground whitespace-pre-line">
             {openPoem.fullText}
           </p>
-          
+
           <div className="flex flex-wrap gap-2">
             {openPoem.tags.map(tag => (
               <Badge key={tag} variant="outline">
@@ -85,7 +84,7 @@ const PoemDialog: React.FC<{ poems: Poem[], onClose: () => void }> = ({ poems, o
               </Badge>
             ))}
           </div>
-          
+
           <div className="flex items-center gap-4 pt-2">
             <Button variant="ghost" size="sm" className="text-muted-foreground">
               <Heart className="mr-2 h-4 w-4" />
@@ -225,7 +224,7 @@ const FavoritesPage: React.FC = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Poems Grid */}
+              {/* Most Saved Poems Grid */}
               <TabsContent value="most-saved" className="mt-6">
                 <div className="grid gap-6">
                   {favoritedPoems.map((poem, index) => (
@@ -236,16 +235,16 @@ const FavoritesPage: React.FC = () => {
                       animate="visible"
                       variants={fadeUpVariant}
                     >
-                      <Card 
-                        className="hover:shadow-md transition-shadow cursor-pointer"
+                      <Card
+                        className="hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer group"
                         onClick={() => handlePoemOpen(poem)}
                       >
                         <CardContent className="pt-6">
                           <div className="space-y-4">
                             <div className="flex justify-between items-start">
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="text-xl font-serif">{poem.title}</h3>
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-xl font-serif group-hover:text-primary transition-colors">{poem.title}</h3>
                                   {poem.trending && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                       <TrendingUp className="h-3 w-3" />
@@ -254,57 +253,60 @@ const FavoritesPage: React.FC = () => {
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                  Saved {poem.timeAgo}
+                                  Saved {poem.timeAgo} • <span className="font-medium">{poem.saveCount} saves</span>
                                 </p>
                               </div>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 onClick={handleButtonClick}
+                                className="text-primary hover:text-primary/80"
                               >
-                                <BookmarkPlus className="h-4 w-4" />
+                                <Heart className="h-5 w-5 fill-current" />
                               </Button>
                             </div>
-                            
-                            <p className="font-serif text-muted-foreground whitespace-pre-line">
+
+                            <p className="font-serif text-muted-foreground whitespace-pre-line leading-relaxed">
                               {poem.excerpt}
                             </p>
-                            
+
                             <div className="flex flex-wrap gap-2">
                               {poem.tags.map(tag => (
-                                <Badge key={tag} variant="outline">
+                                <Badge key={tag} variant="outline" className="px-3">
                                   {tag}
                                 </Badge>
                               ))}
                             </div>
-                            
-                            <div className="flex items-center gap-4 pt-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-muted-foreground"
-                                onClick={handleButtonClick}
-                              >
-                                <Heart className="mr-2 h-4 w-4" />
-                                {poem.saveCount}
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-muted-foreground"
+
+                            <div className="flex items-center gap-2 pt-2 border-t">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-primary"
                                 onClick={handleButtonClick}
                               >
                                 <MessageCircle className="mr-2 h-4 w-4" />
-                                {poem.comments}
+                                <span className="font-medium">{poem.comments}</span>
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-muted-foreground"
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-primary"
                                 onClick={handleButtonClick}
                               >
                                 <Share2 className="mr-2 h-4 w-4" />
                                 Share
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="ml-auto"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePoemOpen(poem);
+                                }}
+                              >
+                                Read Full Poem
                               </Button>
                             </div>
                           </div>
@@ -314,6 +316,110 @@ const FavoritesPage: React.FC = () => {
                   ))}
                 </div>
               </TabsContent>
+
+              {/* Trending Tab */}
+              <TabsContent value="trending" className="mt-6">
+                <div className="grid gap-6">
+                  {favoritedPoems.filter(p => p.trending).map((poem, index) => (
+                    <motion.div
+                      key={poem.id}
+                      custom={index + 3}
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeUpVariant}
+                    >
+                      <Card
+                        className="hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer group"
+                        onClick={() => handlePoemOpen(poem)}
+                      >
+                        <CardContent className="pt-6">
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-xl font-serif group-hover:text-primary transition-colors">{poem.title}</h3>
+                                  <Badge variant="secondary" className="flex items-center gap-1">
+                                    <TrendingUp className="h-3 w-3" />
+                                    Trending
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Saved {poem.timeAgo} • <span className="font-medium">{poem.saveCount} saves</span>
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleButtonClick}
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <Heart className="h-5 w-5 fill-current" />
+                              </Button>
+                            </div>
+
+                            <p className="font-serif text-muted-foreground whitespace-pre-line leading-relaxed">
+                              {poem.excerpt}
+                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {poem.tags.map(tag => (
+                                <Badge key={tag} variant="outline" className="px-3">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-2 border-t">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-primary"
+                                onClick={handleButtonClick}
+                              >
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                <span className="font-medium">{poem.comments}</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-primary"
+                                onClick={handleButtonClick}
+                              >
+                                <Share2 className="mr-2 h-4 w-4" />
+                                Share
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="ml-auto"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePoemOpen(poem);
+                                }}
+                              >
+                                Read Full Poem
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </TabsContent>
+
+              {/* Recent Tab */}
+              <TabsContent value="recent" className="mt-6">
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                    <Clock className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-serif mb-2">No Recent Activity</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Your recently viewed poems will appear here
+                  </p>
+                </div>
+              </TabsContent>
             </Tabs>
           </motion.div>
         </div>
@@ -321,7 +427,7 @@ const FavoritesPage: React.FC = () => {
 
       {/* Poem Dialog with Suspense */}
       <Suspense fallback={null}>
-        <PoemDialog 
+        <PoemDialog
           poems={favoritedPoems}
           onClose={handlePoemClose}
         />

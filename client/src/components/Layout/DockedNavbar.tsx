@@ -4,6 +4,7 @@ import {
   HomeIcon,
   PenToolIcon,
   Info,
+  BookMarkedIcon,
 } from "lucide-react";
 
 import { cn } from "@/utils/utils";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Dock, DockIcon } from "@/components/ui/dock";
+import { SOCIAL_LINKS } from "@/constants/config";
 
 export type IconProps = React.HTMLAttributes<SVGElement>;
 
@@ -35,15 +37,13 @@ const DATA = {
   navbar: [
     { href: "/", icon: HomeIcon, label: "Home" },
     { href: "/create", icon: PenToolIcon, label: "Create" },
-    // { href: "/explore", icon: BookOpenIcon, label: "Explore" },
-    // { href: "/learn", icon: GraduationCapIcon, label: "Learn" },
-    // { href: "/favorites", icon: HeartIcon, label: "Favorites" },
+    { href: "/my-poems", icon: BookMarkedIcon, label: "My Poems" },
     { href: "/about", icon: Info, label: "About" },
   ],
   social: {
     github: {
       name: "View on GitHub",
-      url: "https://github.com/abhisheksharm-3/poetica",
+      url: SOCIAL_LINKS.github.projectUrl,
       icon: Icons.github,
     },
   },

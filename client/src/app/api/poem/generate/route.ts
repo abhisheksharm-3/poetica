@@ -4,14 +4,14 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { FrontendParams } from '@/utils/types';
-import { generatePoem } from '@/utils/poemService';
+import { generatePoem } from '@/utils/poem-service';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
 
 export async function POST(request: Request) {
   try {
     const body = await request.json() as FrontendParams;
-    
+
     if (!body.style || !body.emotionalTone || !body.length) {
       return NextResponse.json(
         { error: "Missing required parameters" },

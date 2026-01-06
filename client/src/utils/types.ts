@@ -1,33 +1,34 @@
 export interface PoemFormData {
-    style: string;
-    emotionalTone: string;
-    creativeStyle: number;
-    languageVariety: number;
-    length: string;
-    wordRepetition: number;
-    content?: string;
-  }
-  
-  export interface SavedPoem extends PoemFormData {
-    id: string;
-    createdAt: string;
-    content: string;
-  }
-  
-  export interface SharedPoem extends SavedPoem {
-    shareId: string;
-    sharedAt: string;
-  }
+  style: string;
+  emotionalTone: string;
+  creativeStyle: number;
+  languageVariety: number;
+  length: string;
+  wordRepetition: number;
+  content?: string;
+}
 
-  export interface PoemFormState {
-    style: string;
-    emotionalTone: string;
-    creativeStyle: number;
-    languageVariety: number;
-    length: string;
-    wordRepetition: number;
-  }
-  export type PoemStyle = "sonnet" | "haiku" | "free-verse" | "villanelle";
+export interface SavedPoem extends PoemFormData {
+  id: string;
+  title: string;
+  createdAt: string;
+  content: string;
+}
+
+export interface SharedPoem extends SavedPoem {
+  shareId: string;
+  sharedAt: string;
+}
+
+export interface PoemFormState {
+  style: string;
+  emotionalTone: string;
+  creativeStyle: number;
+  languageVariety: number;
+  length: string;
+  wordRepetition: number;
+}
+export type PoemStyle = "sonnet" | "haiku" | "free-verse" | "villanelle";
 export type EmotionalTone = "contemplative" | "joyful" | "melancholic" | "romantic";
 export type PoemLength = "short" | "medium" | "long";
 export interface PoemValidationRequest {

@@ -1,22 +1,23 @@
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
-import { 
-  FrontendParams, 
-  BackendParams, 
-  PoemApiResponse, 
+import {
+  FrontendParams,
+  BackendParams,
+  PoemApiResponse,
   GenerationResponse,
 } from './types';
-import { STYLE_CONFIGS } from './styleConfig';
-import { createEnhancedPrompt } from '../utils/promptEnhancer';
-import { validatePoem } from './validationService';
+import { STYLE_CONFIGS } from './style-config';
+import { createEnhancedPrompt } from './prompt-enhancer';
+import { validatePoem } from './validation-service';
 import { PoemLength } from './types';
 
 function transformParams(params: FrontendParams): BackendParams {
   const styleConfig = STYLE_CONFIGS[params.style];
-  const nameMatch = params.userPrompt.match(/about\s+(?:my love lady,?\s+)?(\w+)/i);
+  const userPrompt = params.userPrompt || "";
+  const nameMatch = userPrompt.match(/about\s+(?:my love lady,?\s+)?(\w+)/i);
   const name = nameMatch ? nameMatch[1] : "";
-  
+
   return {
-    prompt: `Create a ${params.style} poem ${name ? `about ${name}` : ""} with the theme: ${params.userPrompt}`,
+    prompt: `Create a ${params.style} poem ${name ? `about ${name}` : ""} with the theme: ${userPrompt || "inspire me with something beautiful"}`,
     max_length: getLengthLimit(params.length),
     temperature: styleConfig.temperature,
     top_k: 30,
@@ -36,24 +37,24 @@ function getLengthLimit(length: PoemLength): number {
 
 function extractKeywords(lines: string[]): string {
   const fullText = lines.join(' ');
-  
+
   const stopWords = new Set([
     'the', 'and', 'a', 'in', 'of', 'to', 'with', 'on', 'at', 'for', 'by',
     'is', 'are', 'was', 'were', 'be', 'have', 'has', 'had', 'this', 'that',
     'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her'
   ]);
-  
+
   const words = fullText
     .toLowerCase()
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
     .split(/\s+/)
     .filter(word => word.length > 3 && !stopWords.has(word));
-  
+
   const wordFreq = words.reduce((acc, word) => {
     acc[word] = (acc[word] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   return Object.entries(wordFreq)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10)
@@ -67,7 +68,7 @@ export async function generatePoem(
 ): Promise<GenerationResponse> {
   try {
     const backendParams = transformParams(params);
-    
+
     // First, get initial generation from backend
     const backendResponse = await fetch(`${process.env.SERVER_URI}/generate`, {
       method: "POST",
@@ -82,42 +83,42 @@ export async function generatePoem(
     }
 
     const apiResponse = await backendResponse.json() as PoemApiResponse;
-    
+
     // Extract keywords and create enhanced prompt
     const keywords = extractKeywords(apiResponse.poem.lines);
     const enhancedPrompt = createEnhancedPrompt(params, keywords);
-    
+
     // Generate refined poem with Gemini
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash-lite',
       safetySettings: [
         {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
         },
         {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
         },
         {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
         },
         {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
+          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
         },
-    ],
+      ],
     });
 
     const result = await model.generateContent(enhancedPrompt);
     const response = await result.response;
     const text = response.text();
-    
+
     // Parse Gemini's response
     const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
     const generatedContent = JSON.parse(cleanText);
-    
+
     // Validate the generated poem
     const validationResult = await validatePoem({
       poem: generatedContent.poem,
